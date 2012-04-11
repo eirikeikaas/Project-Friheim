@@ -1,0 +1,14 @@
+
+{% include "templates/header.html" %}
+<form id="login" method="post" action="{{ prefix }}/admin/login">
+	<h2>Logg inn</h2>
+	{% if flash.error|length > 0 %}
+	<div class="msg error">{{ flash.error }}</div>
+	{% endif %}
+	<div id="inputcontainer">
+		<div class="line"><label for="brid">Brukernavn:</label><input type="text" name="brid" id="brid"></div>
+		<div class="line"><label for="pswd">Passord:</label><input type="password" name="pswd" id="pswd"></div>
+	</div>
+	<input type="submit" value="Logg inn">
+</form>
+{% include "templates/footer.html" %}

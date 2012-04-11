@@ -1,0 +1,5 @@
+config.ini
+static/.DS_Store
+media/lib/Twig/LICENSE
+media/lib/Twig/README.markdown
+cache/.DS_Store

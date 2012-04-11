@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>{{ title }}</title>
+		<meta name="viewport" content="user-scalable=0, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+		<link rel="stylesheet" href="{{ prefix }}/media/css/style.css">
+		<!--[if lt IE 9]><link rel="stylesheet" href="{{ prefix }}/login/media/css/ielt9.css"><![endif]-->
+		{% for script in scripts %}
+			{% if script.type == "css" %}
+				<style type="text/css">
+					{% if script.link == true %}
+						@import url('{{ script.script }}');
+					{% else %}
+						{{ script.script }}
+					{% endif %}
+				</style>
+			{% elseif script.type == "javascript" %}
+				<script type="text/javascript" {% if script.link == true %}src="{{ script.script }}">{% else %}>
+					{{ script.script }}
+					{% endif %}
+				</script>
+			{% endif %}
+		{% endfor %}
+	</head>
+	<body>
+		<div id="modalcontainer">
+			<div id="modal">
+			</div>
+		</div>
+		<div id="header">
+			<div class="center">
+				<div id="title">{{ title }}</div>
+				{% if user.loggedin %}
+					{% for tab in tabs %}
+						{% if (tab.admin and user.admin) or not user.admin %}
+							<a href="{{ prefix }}/{{ tab.route }}" class="tab" id="{{ tab.slug }}"><img src="{{ prefix }}/media/img/ico/{{ tab.icon }}.png">{{ tab.name }}</a>
+						{% endif %}
+					{% endfor %}
+					<div id="me" class="right">
+						<div id="box">{{ user.name }}
+							<ul id="drop">
+								<li><a href="{{ prefix }}/admin/users/edit/{{ user.id }}">Konto</a></li>
+								<li><a href="{{ prefix }}/admin/logout" id="logout">Logg ut</a></li>
+							</ul>
+						</div>
+					</div>
+				{% endif %}
+			</div>
+		</div>

@@ -1,0 +1,26 @@
+{% include "templates/header.html" %}
+<div id="content">
+	<div class="block">
+		<h2>
+			Dokumentarkiv
+			<a href="{{ prefix }}/admin/blog/upload" class="hbtn">
+				Last opp ny fil<img src="{{ prefix }}/media/img/act/2.png">
+			</a>
+		</h2>
+		<table>
+			<tbody>
+				{% for post in posts %}
+				<tr>
+					<td>{{ post.title }}</td>
+					<td>{{ post.name }}</td>
+					<td>
+						<div class="tdwrap">
+							<a href="{{ prefix }}/admin/blog/edit/{{ post.id }}" class="editbtn"></a>
+						</div>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+{% include "templates/footer.html" %}

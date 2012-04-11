@@ -1,0 +1,21 @@
+{% include "templates/header.html" %}
+<div id="content">
+	<form class="block" action="{{ prefix }}/admin/blog/edit/save" method="post">
+		<input type="hidden" name="id" value="{{ post.id }}">
+		<h2>
+			Rediger artikkel
+		</h2>
+		<div class="line">
+			<label for="title">Tittel:</label><input type="text" name="title" value="{{ post.title }}">
+		</div>
+		<div class="line">
+			<hr />
+		</div>
+		<div class="line">
+			<label for="blogbody">Artikkel:</label>
+			<textarea type="text" name="blogbody">{{ post.body }}</textarea>
+		</div>
+		<div class="footer"><input type="submit" value="Lagre"><input type="button" class="grey" value="Avbryt"></div>
+	</div>
+</div>
+{% include "templates/footer.html" %}

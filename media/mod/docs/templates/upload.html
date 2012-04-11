@@ -1,0 +1,24 @@
+{% include "templates/header.html" %}
+<div id="content">
+	<form class="block" action="{{ prefix }}/admin/blog/edit/save" method="post">
+		<h2>
+			Last opp ny fil
+		</h2>
+		<div class="line">
+			<label for="title">Velg fil:</label><input type="file" name="title" value="">
+		</div>
+		{% for field in fields %}
+			<div class="line">
+				{% if field.type == 'rule' %}
+					<hr>
+				{% elseif field.type == 'textarea' %}
+					<textarea name="field.name">{{field.value}}</textarea>
+				{% else %}
+					<input type="{{ field.type }}" name="{{ field.name }}" value="{{ field.value }}">
+				{% endif %}
+			</div>
+		{% endfor %}
+		<div class="footer"><input type="submit" value="Lagre"><input type="button" class="grey" value="Avbryt"></div>
+	</div>
+</div>
+{% include "templates/footer.html" %}

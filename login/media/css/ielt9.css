@@ -1,0 +1,7 @@
+table .editbtn{
+	display: block;
+}
+input[type="submit"], input[type="button"]{
+	padding: 10px;
+	width: 150px !important;
+}

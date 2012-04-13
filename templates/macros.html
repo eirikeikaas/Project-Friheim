@@ -1,0 +1,29 @@
+{% macro input(type, name, value, attributes) %}
+	{% if type == 'textarea' %}
+		<textarea name="{{ name }}" {{ attributes }}>{{ value }}</textarea>
+	{% elseif type == 'select' %}
+		<select name="{{ name }}" {{ attributes }}>
+			{% for val in value %}
+				<option value="{{ val.value }}">{{ val.name }}</option>
+			{% endfor %}
+		</select>
+	{% else %}
+		<input type="{{ type }}" name="{{ name }}" value="{{ value }}" {{ attributes }}>
+	{% endif %}
+{% endmacro %}
+
+{% macro table(data) %}
+	<table>
+		<tbody>
+			{% for row in data %}
+				<tr>
+					{% for col in row %}
+						<td>
+							{{ col }}
+						</td>
+					{% endfor %}
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+{% endmacro %}

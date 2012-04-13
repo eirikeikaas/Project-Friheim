@@ -138,11 +138,19 @@ class Auth{
 			});
 
 			System::addGlobalHook('saveForm', function($data){
-				if(!Auth::key($data['app']->request()->post('key'))){
-					System::log("Auth failed to verify the form-key and will now redirect to index with message");
-					System::setMessage($data['app'], "Kunne ikke verifisere form-nøkkel", false);
-					$data['app']->redirect(System::getConfig('prefix').'/admin');
+				$key = $data['app']->request()->post('key');
+				if(!empty($key)){
+					if(Auth::key($key)){
+						return true;
+					}else{
+						System::log("Auth failed to verify the form-key and will now redirect to index with message");
+					}
+				}else{
+					System::log("Auth form-key was not in POST and will now redirect to index with message");
 				}
+				System::setMessage($data['app'], "Kunne ikke verifisere form-nøkkel", false);
+				$data['app']->redirect(System::getConfig('prefix').'/admin');
+				return false;
 			});
 		}else{
 			die("You need to include the DB-class and System-class before instantiating Auth");
@@ -445,10 +453,12 @@ class Auth{
 			$_SESSION['key'] = $key;
 			$_SESSION[$key] = $stamp;
 			
+			System::log("Key: ".implode(str_split(strtoupper(Auth::key(false, true)),2),":"));
+
 			return $key;
 		}else{
 			// Check ( Session-key is the same as $check, the stamp is not older than 10 minutes and the stamp is not from the future )
-			if($check===$_SESSION['key'] && $_SESSION[$check] > time()-600 && $_SESSION[$check] < time()){
+			if($check===@$_SESSION['key'] && @$_SESSION[$check] > time()-600 && @$_SESSION[$check] < time()){
 				unset($_SESSION['key']);
 				unset($_SESSION[$check]);
 				$_SESSION['executed'] = time();

@@ -1,14 +1,13 @@
 {% include "templates/header.html" %}
-{% import "templates/macros.html" as macros %}
 <div id="content">
-	<form class="block" action="{{ prefix }}/admin/docs/upload/save" method="post" enctype="multipart/form-data">
+	<form class="block" action="{{ prefix }}/admin/docs/newfolder/save" method="post" enctype="multipart/form-data">
 		<input type="hidden" name="key" value="{{ key }}">
 		<input type="hidden" name="cwd" value="{{ cwd }}">
 		<h2>
-			Last opp ny fil
+			Lag en ny mappe
 		</h2>
 		<div class="line">
-			<label for="file">Velg fil:</label><input type="file" name="file">
+			<label for="folder">Navn:</label><input type="text" name="folder">
 		</div>
 		{% for field in fields %}
 			<div class="line">

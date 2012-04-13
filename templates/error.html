@@ -1,1 +1,11 @@
-oops. / {{ msg }}
+{% include 'templates/header.html' %}
+<div class="center">
+	<div id="error" class="block">
+		<h1>En alvorlig feil oppstod</h1>
+		<p>Vennligst prøv igjen eller kontakt en <a href="{{ admincontact }}">administrator</a></p>
+		{% if debug %}
+			<pre id="errormsg">{{ msg }}</pre>
+		{% endif %}
+	</div>
+</div>
+{% include 'templates/footer.html' %}

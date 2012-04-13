@@ -8,11 +8,11 @@
  * @author 
  **/
 
-class Users_Def extends Controller{
-	private $users = false;
+class Groups_Def extends Controller{
+	private $groups = false;
 
 	public function __construct(){
-		$this->info("Users", "users", "0.1a");
+		$this->info("Groups", "groups", "0.1a");
 
 		// ACTIONS ////////////////////////////////////
 
@@ -36,10 +36,10 @@ class Users_Def extends Controller{
 
 		///////////////////////////////////////////////
 
-		$this->defineTab("Brukere", "users", "admin/users/list", 11, true);
+		$this->defineTab("Grupper", "groups", "admin/groups/list", 2, true, 6);
 
-		include_once('Users.php');
-		$this->users = new Users("users");
+		include_once('Groups.php');
+		$this->groups = new Groups("groups");
 	}
 
 	public static function install(){
@@ -49,37 +49,37 @@ class Users_Def extends Controller{
 	}
 
 	public function preList($app, $params){
-		$users = $this->users->getAll(0, 10, false);
-		System::addVars(array('users' => $users));
+		/*$users = $this->users->getAll(0, 10, false);
+		System::addVars(array('users' => $users));*/
 	}
 
 	public function preEdit($app, $params){
 		$this->runHook($app, 'startForm');
-		$post = $this->users->getSingle($params['id']);
-		System::addVars(array('post' => $post));
+		/*$post = $this->users->getSingle($params['id']);
+		System::addVars(array('post' => $post));*/
 	}
 
 	public function saveEdit($app, $params){
 		$this->runHook($app, 'saveForm');
-		if($this->users->update($app->request()->post('id'),$app->request()->post('blogbody'), $app->request()->post('title'))){
+		/*if($this->users->update($app->request()->post('id'),$app->request()->post('blogbody'), $app->request()->post('title'))){
 			System::setMessage($app, "Artikkelen ble lagret");
 			return true;
 		}else{
 			System::setMessage($app, "Noe gikk galt under lagringen av artikkelen", false);
 			System::log("Could not save?");
 			return false;
-		}
+		}*/
 	}
 
 	public function saveInsert($app, $params){
 		$this->runHook($app, 'saveForm');
-		if($this->users->update($app->request()->post('id'),$app->request()->post('blogbody'), $app->request()->post('title'))){
+		/*if($this->users->update($app->request()->post('id'),$app->request()->post('blogbody'), $app->request()->post('title'))){
 			System::setMessage($app, "Artikkelen ble lagret");
 			return true;
 		}else{
 			System::setMessage($app, "Noe gikk galt under lagringen av artikkelen", false);
 			System::log("Could not save?");
 			return false;
-		}
+		}*/
 	}
 }

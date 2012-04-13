@@ -147,6 +147,7 @@ class System{
 	public static function installModules(){
 		$keys = array_keys(self::$modules);
 		$len = count($keys);
+
 		for($i=0;$i<$len;$i++){
 			$class = self::getModule($keys[$i], true);
 
@@ -168,8 +169,8 @@ class System{
 
 		if(!empty($name) && array_key_exists(ucfirst($name), self::$modules)){
 			include_once($file);
-
 			$class = ucfirst($name)."_Def";
+
 			if(class_exists($class) && get_parent_class($class) == "Controller"){
 				if(!$instantiate){
 					return $class;
@@ -240,9 +241,6 @@ class System{
 			}
 			fclose($f);
 		}
-
-
-
 	}
 
 	/**
@@ -318,15 +316,18 @@ class System{
 		return (bool)self::$config['debug'];
 	}
 
-	private static function debugData(){
+	private static function debugData($app){
 		$user = self::$auth->userData();
-		$keynice = implode(str_split(strtoupper(Auth::key(false, true)),2)," ");
-		$str = "PHP:  \t ".phpversion()."\n";
+		$keynice = implode(str_split(strtoupper(Auth::key(false, true)),2),":");
+		$varkeys = array_keys(self::$vars);
+		$error = @$php_errormsg;
+		$str = "PHP:  \t ".phpversion()." | $error\n";
 		$str .= "MYSQL:\t ".DB::report()."\n";
 		$str .= "USER: \t {$user['id']}, {$user['name']}, {$user['email']}\n";
 		$str .= "AGE: \t ".(time()-$_SESSION['CREATED'])."sec\n";
 		$str .= "MAX: \t ".System::getConfig('sessionRegenerate')."sec\n";
 		$str .= "KEY:  \t $keynice\n";
+		$str .= "VARS: \t ".implode($varkeys, ", ")."\n";
 		return $str;
 	}
 
@@ -337,19 +338,19 @@ class System{
 	 * @return void
 	 */
 
-	public static function vars($vars = array()){
+	public static function vars($app, $vars = array()){
 		$system = array();
 
 		$system['title'] = self::getConfig('title');
 		$system['prefix'] = self::getConfig('prefix');
 		$system['debug'] = self::isDebug();
-		$system['debugdata'] = self::debugData();
+		$system['debugdata'] = self::debugData($app);
+		$system['admincontact'] = self::getConfig('admincontact');
 		$system['user'] = self::$auth->userData();
 		$system['user']['admin'] = self::$auth->isAdmin();
 		$system['user']['loggedin'] = self::$auth->isLoggedIn();
 		$system['tabs'] = self::$tabs;
 		$system['scripts'] = array_merge(self::$scripts, self::$userScripts);
-
 
 		return array_merge($system, self::$vars, $vars);
 	}
@@ -363,7 +364,6 @@ class System{
 
 	public static function addVars($args){
 		self::$vars = array_merge(self::$vars, $args);
-		//die(var_export(self::$vars))
 	}
 
 	/**
@@ -403,6 +403,142 @@ class System{
 		if(is_array($array)){
 			self::$userScripts = $array;
 		}
+	}
+
+	public static function stat($file) {
+		clearstatcache();
+		$ss=@stat($file);
+		if(!$ss) return false; //Couldnt stat file
+	 
+		$ts=array(
+			0140000=>'ssocket',
+			0120000=>'llink',
+			0100000=>'-file',
+			0060000=>'bblock',
+			0040000=>'ddir',
+			0020000=>'cchar',
+			0010000=>'pfifo'
+		);
+	 
+		$p=$ss['mode'];
+		$t=decoct($ss['mode'] & 0170000); // File Encoding Bit
+	 
+		$str =(array_key_exists(octdec($t),$ts))?$ts[octdec($t)]{0}:'u';
+		$str.=(($p&0x0100)?'r':'-').(($p&0x0080)?'w':'-');
+		$str.=(($p&0x0040)?(($p&0x0800)?'s':'x'):(($p&0x0800)?'S':'-'));
+		$str.=(($p&0x0020)?'r':'-').(($p&0x0010)?'w':'-');
+		$str.=(($p&0x0008)?(($p&0x0400)?'s':'x'):(($p&0x0400)?'S':'-'));
+		$str.=(($p&0x0004)?'r':'-').(($p&0x0002)?'w':'-');
+		$str.=(($p&0x0001)?(($p&0x0200)?'t':'x'):(($p&0x0200)?'T':'-'));
+	 	
+	 	$s = array();
+
+		$s=array(
+			'perms'=>array(
+				'umask'=>sprintf("%04o",@umask()),
+				'human'=>$str,
+				'octal1'=>sprintf("%o", ($ss['mode'] & 000777)),
+				'octal2'=>sprintf("0%o", 0777 & $p),
+				'decimal'=>sprintf("%04o", $p),
+				'fileperms'=>@fileperms($file),
+				'mode1'=>$p,
+				'mode2'=>$ss['mode']
+			),
+			'owner'=>array(
+				'fileowner'=>$ss['uid'],
+				'filegroup'=>$ss['gid'],
+				'owner'=>
+					(function_exists('posix_getpwuid'))?
+						@posix_getpwuid($ss['uid']):'',
+				'group'=>
+					(function_exists('posix_getgrgid'))?
+						@posix_getgrgid($ss['gid']):''
+			),
+
+	 		'file'=>array(
+				'filename'=>$file,
+				'realpath'=>(@realpath($file) != $file) ? @realpath($file) : '',
+				'dirname'=>@dirname($file),
+				'basename'=>@basename($file)
+			),
+
+			'filetype'=>array(
+				'type'=>substr($ts[octdec($t)],1),
+				'type_octal'=>sprintf("%07o", octdec($t)),
+				'is_file'=>@is_file($file),
+				'is_dir'=>@is_dir($file),
+				'is_link'=>@is_link($file),
+				'is_readable'=> @is_readable($file),
+				'is_writable'=> @is_writable($file)
+			),
+	  
+			'device'=>array(
+				'device'=>$ss['dev'], //Device
+				'device_number'=>$ss['rdev'], //Device number, if device.
+				'inode'=>$ss['ino'], //File serial number
+				'link_count'=>$ss['nlink'], //link count
+				'link_to'=>(@$s['type']=='link') ? @readlink($file) : ''
+			),
+	 
+			'size'=>array(
+				'size'=>$ss['size'], //Size of file, in bytes.
+				'blocks'=>$ss['blocks'], //Number 512-byte blocks allocated
+				'block_size'=> $ss['blksize'] //Optimal block size for I/O.
+			),
+	
+			'time'=>array(
+				'mtime'=>$ss['mtime'], //Time of last modification
+				'atime'=>$ss['atime'], //Time of last access.
+				'ctime'=>$ss['ctime'], //Time of last status change
+				'accessed'=>@date('Y M D H:i:s',$ss['atime']),
+				'modified'=>@date('Y M D H:i:s',$ss['mtime']),
+				'created'=>@date('Y M D H:i:s',$ss['ctime'])
+			)
+		);
+	
+		clearstatcache();
+		return $s;
+	}
+
+	public static function nicetime($date){
+		if(empty($date)){
+			return "ERROR: No date provided";
+		}
+		$periods = array("sekund", "minutt", "time", "dag", "uke", "måned", "år", "tiår");
+		$lengths = array("60","60","24","7","4.35","12","10");
+		$now = time();
+		$unix_date = strtotime($date);
+		
+		// check validity of date
+		if(empty($unix_date)){
+			return "ERROR: Invalid date";
+		}
+
+		// is it future date or past date
+		if($now > $unix_date){
+			$difference = $now - $unix_date;
+			$tense = "siden";
+		}else{
+			$difference = $unix_date - $now;
+			$tense = "fra nå";
+		}
+
+		for($j = 0; $difference >= $lengths[$j] && $j < count($lengths)-1; $j++) {
+			$difference /= $lengths[$j];
+		}
+
+		$difference = round($difference);
+		if($difference != 1) {
+//			$periods[$j] .= "s"; // plural for English language
+			$periods = array("sekunder", "minutter", "timer", "dager", "uker", "måneder", "år", "tiår"); // plural for international words
+		}
+		return "$difference $periods[$j] {$tense}";
+	}
+
+	public static function formatForTable($data){
+		$array = array();
+
+		return $array;
 	}
 }
 
@@ -463,6 +599,15 @@ abstract class Controller{
 	 * @static
 	 * @var array
 	 **/
+	private $version = "";
+
+	/**
+	 * Walk-around array which holds IP-addresses that can bypass the authentication
+	 *
+	 * @access private
+	 * @static
+	 * @var array
+	 **/
 	private static $scripts = array();
 
 	/**
@@ -499,9 +644,25 @@ abstract class Controller{
 	 * @return void
 	 */
 
-	protected function name($name, $slug){
+	protected function info($name, $slug, $version){
 		$this->name = $name;
 		$this->slug = $slug;
+		$this->version = $version;
+	}
+
+	/**
+	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * 
+	 * @access private
+	 * @return void
+	 */
+
+	public function version($version = false){
+		if($version !== false){
+			return version_compare($version, $this->version);
+		}else{
+			return $this->version;
+		}
 	}
 
 	/**
@@ -536,6 +697,7 @@ abstract class Controller{
 	public function getTemplate($action){
 		if(!empty($action)){
 			$tpl = 'media/mod/'.$this->slug.'/templates/'.$this->actionTable[$action]['template'];
+
 			if(file_exists($tpl)){
 				return $tpl;
 			}else{
@@ -569,11 +731,12 @@ abstract class Controller{
 				$map = $method['parameterMap'];
 				$keys = array_keys($map);
 				$len = count($keys);
-				$vals = $parameters;
-
+				$vals = explode(System::getConfig('paramsplit'), $parameters);
 				$mapped = array();
+
 				for($i=0;$i<$len;$i++){
 					$param = $keys[$i];
+
 					if($map[$param] === true && !isset($vals[$i])){
 						return false;
 					}else{
@@ -618,9 +781,9 @@ abstract class Controller{
 		if($module != '*'){
 			$mod = ucfirst($module)."_Def";
 			$file = System::getConfig("basedir")."/media/mod/$module/$mod.php";
+
 			if(class_exists($mod) || file_exists($file)){
 				include_once($file);	
-
 				$mod = new $mod;
 				$mod->addHookInternal($hook, $callback);
 			}else if($failable){
@@ -640,10 +803,12 @@ abstract class Controller{
 		$hookcount = 0;
 		$data = array("app" => $app);
 		$data = array_merge($data, $params);
+
 		if(isset(Controller::$globalhooks[$hook]) && is_array(Controller::$globalhooks[$hook])){
 			foreach(Controller::$globalhooks[$hook] as $thehook){
 				if(is_callable($thehook)){
 					$hookcount++;
+
 					if($thehook instanceof Closure){
 						$thehook($data);
 					}else{
@@ -656,6 +821,7 @@ abstract class Controller{
 			foreach($this->hooks[$hook] as $thehook){
 				if(is_callable($thehook)){
 					$hookcount++;
+
 					if($thehook instanceof Closure){
 						$thehook($data);
 					}else{
@@ -664,7 +830,7 @@ abstract class Controller{
 				}
 			}
 		}
-		System::log("$hookcount hooks executed");
+		System::log("$hookcount hooks executed for $hook in {$this->name}");
 	}
 
 	/**
@@ -694,6 +860,7 @@ abstract class Controller{
 
 	protected function defineScript($action, $type, $script, $link = true){
 		$len = count($action);
+
 		if(is_array($action)){
 			for($i=0;$i<$len;$i++){
 				self::$scripts[$action[$i]][] = array(
@@ -741,6 +908,7 @@ abstract class Model{
 	private function formatJoin($join){
 		$formatted = "";
 		$len = count($join);
+
 		for($i=0;$i<$len;$i++){
 			$xleft = explode($join[$i][0],'.');
 			$xright = explode($join[$i][2],'.');

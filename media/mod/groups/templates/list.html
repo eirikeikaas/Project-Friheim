@@ -1,0 +1,26 @@
+{% include "templates/header.html" %}
+<div id="content">
+	<div class="block">
+		<h2>
+			Brukere
+			<a href="{{ prefix }}/admin/users/insert" class="hbtn">
+				Legg til ny bruker<img src="{{ prefix }}/media/img/act/4.png">
+			</a>
+		</h2>
+		<table>
+			<tbody>
+				{% for user in users %}
+				<tr>
+					<td>{{ user.name }}</td>
+					<td>{{ user.admin }}</td>
+					<td>
+						<div class="tdwrap">
+							<a href="{{ prefix }}/admin/users/edit/{{ user.id }}" class="editbtn"></a>
+						</div>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+{% include "templates/footer.html" %}

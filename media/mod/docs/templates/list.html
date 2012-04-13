@@ -1,26 +1,40 @@
 {% include "templates/header.html" %}
+{% import "templates/macros.html" as macros %}
 <div id="content">
 	<div class="block">
 		<h2>
-			Dokumentarkiv
-			<a href="{{ prefix }}/admin/blog/upload" class="hbtn">
+			<a href="{{ prefix }}/admin/docs/upload/{{ folder }}" class="hbtn">
 				Last opp ny fil<img src="{{ prefix }}/media/img/act/2.png">
 			</a>
+			<a href="{{ prefix }}/admin/docs/newfolder/{{ folder }}" class="hbtn">
+				Lag ny mappe<img src="{{ prefix }}/media/img/act/2.png">
+			</a>
+			Dokumentarkiv
 		</h2>
 		<table>
 			<tbody>
-				{% for post in posts %}
-				<tr>
-					<td>{{ post.title }}</td>
-					<td>{{ post.name }}</td>
-					<td>
-						<div class="tdwrap">
-							<a href="{{ prefix }}/admin/blog/edit/{{ post.id }}" class="editbtn"></a>
-						</div>
-				</tr>
+				{% for file in files %}
+					<tr>
+						<td class="doctype{{ file.type }}">
+							{% if file.type == 'dir' %}
+								<a href="{{ prefix }}/admin/docs/list/{{ file.encoded }}">{{ file.name }}</a>
+							{% else %}
+								{{ file.name }}
+							{% endif %}
+						</td>
+						<td>
+							{{ file.created }}
+						</td>
+						<td>
+							{{ file.modified }}
+						</td>
+						<td>
+							{{ file.rights }}
+						</td>
+					</tr>
 				{% endfor %}
-			</tbody>
-		</table>
+		</tbody>
+	</table>
 	</div>
 </div>
 {% include "templates/footer.html" %}

@@ -12,7 +12,7 @@ class Blog_Def extends Controller{
 	private $blog = false;
 
 	public function __construct(){
-		$this->name("Blog", "blog");
+		$this->info("Blog", "blog", "0.1a");
 
 		// ACTIONS ////////////////////////////////////
 
@@ -47,8 +47,8 @@ class Blog_Def extends Controller{
 
 		// SCRIPTS /////////////////////////////////////
 
-		$this->defineScript(array("insert", "edit"), "javascript", "http://www.google.com/jsapi");
-		$this->defineScript(array("insert", "edit"), "javascript", "google.load('jquery', '1.7.2');", false);
+		//$this->defineScript(array("insert", "edit"), "javascript", "http://www.google.com/jsapi");
+		//$this->defineScript(array("insert", "edit"), "javascript", "google.load('jquery', '1.7.2');", false);
 
 		////////////////////////////////////////////////
 
@@ -88,7 +88,6 @@ class Blog_Def extends Controller{
 
 	public function preInsert($app, $params){
 		$this->runHook($app, 'startForm');
-		// Empty
 	}
 
 	public function saveInsert($app, $params){

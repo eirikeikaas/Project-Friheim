@@ -16,7 +16,8 @@ include_once('media/lib/Slim/Slim.php');
 include_once('media/lib/Slim/Views/TwigView.php');
 
 TwigView::$twigDirectory = __DIR__ . '/media/lib/Twig/lib/Twig/';
-TwigView::$twigOptions = array(/*'cache' => 'cache',*/ 'debug' => System::isDebug());
+TwigView::$twigOptions = array(/*'cache' => 'cache',*/ 'debug' => System::isDebug(), 'auto_reload' => System::isDebug(), 'optimizations' => 0);
+TwigView::$twigExtensions = array('Twig_Debug_Extension');
 
 // Read config.ini
 $sys = new System(SYS_CONFIG);
@@ -34,7 +35,7 @@ $app = new Slim(array(
 Slim_Route::setDefaultConditions(array(
     'module' => '[a-z]{3,}',
     'action' => '[a-z]{3,}',
-    'parameters' => '([a-zA-Z0-9]{1,}(:){0,1}){1,}'
+    'parameters' => '([a-zA-Z0-9\=]{1,}(:){0,1}){1,}'
 ));
 
 // Set auth-instance
@@ -75,16 +76,16 @@ $app->get('/admin/logout(/)', function() use($a, $app, $prefix){
 //Handle admin index
 $app->get('/admin(/)', function() use($a, $app){
 	if(!$a->isLoggedIn()){
-		$app->render(System::getConfig('logintemplate'), System::vars());
+		$app->render(System::getConfig('logintemplate'), System::vars($app));
 	}else{
-		$app->render(System::getConfig('admintemplate'), System::vars());
+		$app->render(System::getConfig('admintemplate'), System::vars($app));
 	}
 });
 
 // Handle module
 $app->map('/admin/:module/:action(/:parameters(/))', function($module, $action, $parameters = false) use($a, $app, $sys, $prefix){
 	if(!$a->isLoggedIn()){
-		$app->render(System::getConfig('logintemplate'), System::vars());
+		$app->render(System::getConfig('logintemplate'), System::vars($app));
 	}else{
 		$_module = $module;
 		$module = $sys->getModule($module);
@@ -94,7 +95,7 @@ $app->map('/admin/:module/:action(/:parameters(/))', function($module, $action, 
 			}
 			if($module->doAction("pre", $action, $app, $parameters) !== false){
 				if($tpl = $module->getTemplate($action)){
-					$app->render($tpl, System::vars());
+					$app->render($tpl, System::vars($app));
 				}else{
 					if(!System::getRoute($app)){
 						$app->redirect($prefix.'/');
@@ -118,13 +119,12 @@ $app->post('/admin/:module/:action/save(/)', function($module, $action) use($a, 
 		$module = $sys->getModule($module);
 		if($module !== false){
 			if($module->doAction("save", $action, $app) === false){
-				$app->render(System::getConfig("errortemplate"), array("msg" => "failed to complete action"));
+				$app->render(System::getConfig("errortemplate"), System::vars($app, array("msg" => "failed to complete action")));
 			}else{
 				if(!System::getRoute($app)){
 					$app->redirect($prefix.'/');
 				}
 			}
-			$app->render(System::getConfig("errortemplate"));
 		}else{
 			$app->render(System::getConfig("errortemplate"));
 		}

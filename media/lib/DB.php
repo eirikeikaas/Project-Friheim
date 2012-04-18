@@ -40,10 +40,16 @@ class DB{
 	 * @return void
 	 */
 	private static function initiate(){
+		// DEPRECATED
 		if(!self::$conn){
 			self::$conn = new MySQLi(System::getConfig('mysqlHost'), System::getConfig('mysqlUser'), System::getConfig('mysqlPswd'), System::getConfig('mysqlDB'));
 			self::$conn->set_charset('utf8');
 		}
+
+		ORM::configure('mysql:host='.System::getConfig('mysqlHost').';dbname='.System::getConfig('mysqlDB'));
+		ORM::configure('username', System::getConfig('mysqlUser'));
+		ORM::configure('password', System::getConfig('mysqlPswd'));
+		ORM::configure('driver_options', array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'));
 	}
 	
 	/**
@@ -68,6 +74,8 @@ class DB{
 	 * @return array
 	 */
 	public static function get($query){
+		System::log($query);
+		System::log("DEPRECATION WARNING: MySQLi is bound to be replaced by Idiorm", true);
 		self::initiate();
 		$q = self::$conn->query($query);
 		

@@ -38,7 +38,7 @@ class Users extends Model{
 			$c_author = DB::escape($author);
 			$c_body = DB::escape($body);
 
-			DB::set("INSERT INTO ".System::getConfig('blogTable')."(title, author, created, changed, body) VALUES ('$c_title', $c_author, NOW(), NOW(), '$c_body')");
+			DB::set("INSERT INTO ".System::getConfig('userTable')."(title, author, created, changed, body) VALUES ('$c_title', $c_author, NOW(), NOW(), '$c_body')");
 		}
 	}
 
@@ -59,7 +59,7 @@ class Users extends Model{
 			$c_id = DB::escape($id);
 			$c_body = DB::escape($body);
 			$c_title = DB::escape($title);
-			DB::set("UPDATE ".System::getConfig('blogTable')." SET changed = NOW(), body = '$c_body', title = '$c_title' WHERE id = $c_id");
+			DB::set("UPDATE ".System::getConfig('userTable')." SET changed = NOW(), body = '$c_body', title = '$c_title' WHERE id = $c_id");
 		}
 	}
 
@@ -77,7 +77,7 @@ class Users extends Model{
 		list($id) = func_get_args();
 		if(Auth::executed()){
 			$c_id = DB::escape($id);
-			DB::set("DELETE FROM ".System::getConfig('blogTable')." WHERE id = $c_id");
+			DB::set("DELETE FROM ".System::getConfig('userTable')." WHERE id = $c_id");
 		}
 	}
 }

@@ -38,24 +38,25 @@ class Users_Def extends Controller{
 
 		$this->defineTab("Brukere", "users", "admin/users/list", 11, true);
 
-		include_once('Users.php');
-		$this->users = new Users("users");
+		//include_once('Users.php');
+		$this->users = ORM::for_table('users');
 	}
 
 	public static function install(){
-		$table = System::getConfig('usersTable');
+		/*$table = System::getConfig('usersTable');
 		$table = (empty($table)) ? 'users' : $table;
 		DB::set("CREATE TABLE IF NOT EXISTS $table (id INT NOT NULL AUTO_INCREMENT ,title VARCHAR(60) NULL ,author INT NULL , timestamp DATETIME NULL , body TEXT NULL , PRIMARY KEY (id) ,UNIQUE INDEX id_UNIQUE (id ASC) )");
+		*/
 	}
 
 	public function preList($app, $params){
-		$users = $this->users->getAll(0, 10, false);
+		$users = $this->users->find_many();
 		System::addVars(array('users' => $users));
 	}
 
 	public function preEdit($app, $params){
 		$this->runHook($app, 'startForm');
-		$post = $this->users->getSingle($params['id']);
+		$post = $this->users->find_one($params['id']);
 		System::addVars(array('post' => $post));
 	}
 

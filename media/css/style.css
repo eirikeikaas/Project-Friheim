@@ -732,11 +732,16 @@ input[type="submit"], input[type="button"]{
 	border-top: 1px solid #151515;
 }
 .doctypedir, .doctypefile{
-	padding-left: 60px;
+	padding: 0;
 	background: no-repeat 20px center;
 }
-.doctypedir{ background-image: url('../img/inline/1.png'); }
-.doctypefile{ background-image: url('../img/inline/2.png'); }
+.doctypedir a, .doctypefile a, .doctypedir span, .doctypefile span{
+	padding: 20px 20px 20px 60px;
+	background: no-repeat 20px center;
+	display: block;
+}
+.doctypedir a, .doctypedir span{ background-image: url('../img/inline/1.png'); }
+.doctypefile a, .doctypefile span{ background-image: url('../img/inline/2.png'); }
 #debugdata{
 	padding: 15px 20px 15px 120px;
 	color: #777;

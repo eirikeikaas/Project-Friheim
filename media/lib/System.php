@@ -842,12 +842,12 @@ abstract class Controller{
 
 	protected function defineTab($name, $slug, $route, $icon, $admin = false, $index = 0){
 		$this->tabsTable[] = array(
-			"name" =>	$name,
-			"slug" =>	$slug,
-			"route" =>	$route,
-			"icon" =>	$icon,
-			"admin" =>	$admin,
-			"index" =>	$index
+			"name" =>	 $name,
+			"slug" =>	 $slug,
+			"route" =>	 $route,
+			"icon" =>	 $icon,
+			"allowed" => $admin,
+			"index" =>	 $index
 		);
 	}
 

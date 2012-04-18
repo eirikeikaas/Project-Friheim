@@ -13,10 +13,14 @@
 				<tr>
 					<td>{{ user.name }}</td>
 					<td>{{ user.admin }}</td>
+					{% if usegroups %}
+						<td>{{ user.group }}</td>
+					{% endif %}
 					<td>
 						<div class="tdwrap">
 							<a href="{{ prefix }}/admin/users/edit/{{ user.id }}" class="editbtn"></a>
 						</div>
+					</td>
 				</tr>
 				{% endfor %}
 			</tbody>

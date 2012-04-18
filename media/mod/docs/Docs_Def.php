@@ -33,7 +33,7 @@ class Docs_Def extends Controller{
 			"pre" => array(
 				"callback" => "preEdit",
 				"parameterMap" => array(
-					"name" => true
+					"file" => true
 				)
 			)
 		));
@@ -113,11 +113,48 @@ class Docs_Def extends Controller{
 	}
 
 	public function preEdit($app, $params){
-		// TODO: Edit file
+		$this->runHook($app, 'startForm');
+		$file = $this->sanitizePath(base64_decode($params['file']));
+
+		if($file !== false){
+			$stat = System::stat($file);
+			$finfo = finfo_open(FILEINFO_MIME);
+			
+			$file = array(
+				'name' => $stat['file']['basename'],
+				'path' => $stat['file']['filename'],
+				'istext' => (substr(finfo_file($finfo, $stat['file']['filename']), 0, 4) == 'text'),
+				'encoded' => base64_encode($stat['file']['filename'])
+			);
+			if($file['istext']){
+				$file['body'] = file_get_contents($file['path']);
+				$file['lines'] = count(file($file['path']));
+			}
+			System::addVars(array('file' => $file));
+		}else{
+			return false;
+		}
 	}
 
 	public function saveEdit($app, $params){
-		// TODO: Edit file
+		$this->runHook($app, 'saveForm');
+		$file = $this->sanitizePath(base64_decode($app->request()->post('file')));
+
+		if($file !== false){
+			$body = $app->request()->post('body');
+			if(!empty($body)){
+				$f = @fopen($file, 'w');
+
+				if($f !== false){
+					fwrite($f, $body);
+					fclose($f);
+				}else{
+					return false;
+				}
+			}
+		}else{
+			return false;
+		}
 	}
 
 	public function preUpload($app, $params){
@@ -132,7 +169,8 @@ class Docs_Def extends Controller{
 		$this->runHook($app, 'saveForm');
 		$unique_id = md5(uniqid(rand(), true));
 		$media = @$_FILES['file'];
-		$path = $this->sanitizePath(base64_decode($app->request()->post('cwd')));
+		$path = $app->request()->post('cwd');
+		$path = !empty($path) ? $this->sanitizePath(base64_decode($path)) : System::getConfig('uploadDir');
 		if($path !== false){
 			$cwd = !empty($path) ? $path : System::getConfig('uploadDir');
 

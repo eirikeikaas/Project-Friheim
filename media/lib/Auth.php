@@ -92,6 +92,15 @@ class Auth{
 	private static $user = false;
 
 	/**
+	 * Holds useful information about the user
+	 *
+	 * @access private
+	 * @static
+	 * @var array
+	 **/
+	private static $users = false;
+
+	/**
 	 * The users login-hash
 	 *
 	 * @access private
@@ -128,11 +137,13 @@ class Auth{
 	public function __construct($table = "users"){
 		if(class_exists("DB") && class_exists("System")){
 			$this->conn = &DB::getInstance();
+			self::$users = ORM::for_table('users');
 			$this->session();
 
 			$this->ua = md5($_SERVER['HTTP_USER_AGENT']);
 			$this->usertable = $table;
 
+			// Hooks
 			System::addGlobalHook('startForm', function($data){
 				System::addVars(array("key" => Auth::key()));
 			});
@@ -208,24 +219,20 @@ class Auth{
 				
 		// Check that brid is email
 		if(preg_match('/^([_a-z0-9-.])+@([a-z0-9-]+.)+[a-z.]{2,5}$/i',$c_brid) === 1){
-			$q = $this->conn->query("SELECT * FROM {$this->usertable} WHERE email = '{$c_brid}' AND password = '{$c_pswd}' LIMIT 1");
-			
+			$q = self::$users->where('email', $c_brid)->where('password', $c_pswd)->find_one();
+
 			// Check that query didn't fail
 			if($q !== false){
-				// Check that query returned a row
-				if($q->num_rows === 1){
-					$r = $q->fetch_assoc();
-					$hash = hash('sha256',hash('sha256',(time()*rand())*5000));
-					$remote = hash('sha256',hash('sha256',(time()*rand())*5000).self::$salt);
-					setcookie('auth',Auth::encrypt($hash), 0, '/');
-					setcookie('user',Auth::encrypt($r['email']), 0, '/');
-					$_SESSION[$hash] = $remote;
-					$remote = hash('sha256',$remote.$this->ua);
-					$this->conn->query("UPDATE ".$this->usertable." SET loginhash = '{$remote}' WHERE id = {$r['id']}");
-					return true;
-				}else{
-					return -1;
-				}
+				$r = $q->as_array();
+				$hash = hash('sha256',hash('sha256',(time()*rand())*5000));
+				$remote = hash('sha256',hash('sha256',(time()*rand())*5000).self::$salt);
+				setcookie('auth',Auth::encrypt($hash), 0, '/');
+				setcookie('user',Auth::encrypt($r['email']), 0, '/');
+				$_SESSION[$hash] = $remote;
+				$remote = hash('sha256',$remote.$this->ua);
+				$q->loginhash = $remote;
+				$q->save();
+				return true;
 			}else{
 				return -2;
 			}
@@ -311,15 +318,14 @@ class Auth{
 			
 				if(strlen($remote) === 64){
 					self::$loginhash = $loginhash = hash('sha256',@$_SESSION[$remote].$this->ua);
-					$q = $this->conn->query("SELECT *, CONCAT(firstname, ' ', lastname) AS name FROM {$this->usertable} WHERE loginhash = '{$loginhash}' AND email = '{$c_email}' LIMIT 1");
-					
-					self::$user = $q->fetch_assoc();
-					
+					$q = self::$users->raw_query("SELECT *, CONCAT(firstname, ' ', lastname) AS name FROM {$this->usertable} WHERE loginhash = :loginhash AND email = :email", array('loginhash' => $loginhash, 'email' => $c_email))->find_one();
+
+					print_r(ORM::get_query_log());
+
 					if($q !== false){
-						if($q->num_rows === 1){
-							self::$loggedIn = true;
-							return true;
-						}
+						self::$loggedIn = true;
+						self::$user = $q->as_array();
+						return true;
 					}else{
 						return false;
 					}
@@ -390,8 +396,12 @@ class Auth{
 		if($id !== false){
 			$d = &DB::getInstance();
 			$c_id = $d->escape_string($id);
-			$q = $d->query("SELECT *, CONCAT(firstname, ' ', lastname) AS name FROM {$this->usertable} WHERE id = {$c_id} LIMIT 1");
-			return $q->fetch_assoc();
+			$q = self::$users->find_one($c_id);
+			if($q !== false){
+				$a = $q->as_array();
+				$a['name'] = $a['firstname'].' '.$a['lastname'];
+				return $a;
+			}
 		}else{
 			return self::$user;
 		}

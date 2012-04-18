@@ -9,6 +9,7 @@ define('SYS_CONFIG', 'media/lib/config.ini');
 
 //////////////////////////////////////////////////////////////////
 
+include_once('media/lib/Idiorm.php'); // *NYI*
 include_once('media/lib/DB.php');
 include_once('media/lib/Auth.php');
 include_once('media/lib/System.php');

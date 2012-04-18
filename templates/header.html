@@ -33,7 +33,7 @@
 				<div id="title">{{ title }}</div>
 				{% if user.loggedin %}
 					{% for tab in tabs %}
-						{% if (tab.admin and user.admin) or not user.admin %}
+						{% if tab.allowed %}
 							<a href="{{ prefix }}/{{ tab.route }}" class="tab" id="{{ tab.slug }}"><img src="{{ prefix }}/media/img/ico/{{ tab.icon }}.png">{{ tab.name }}</a>
 						{% endif %}
 					{% endfor %}

@@ -1,20 +1,24 @@
 {% include "templates/header.html" %}
 <div id="content">
 	<form class="block" action="{{ prefix }}/admin/blog/edit/save" method="post">
-		<input type="hidden" name="id" value="{{ post.id }}">
+		<input type="hidden" name="file" value="{{ file.encoded }}">
+		<input type="hidden" name="key" value="{{ key }}">
+
 		<h2>
-			Rediger artikkel
+			Rediger fil
 		</h2>
 		<div class="line">
-			<label for="title">Tittel:</label><input type="text" name="title" value="{{ post.title }}">
+			<label for="title">Navn:</label><input type="text" name="name" value="{{ file.name }}">
 		</div>
 		<div class="line">
 			<hr />
 		</div>
+		{% if file.istext %}
 		<div class="line">
-			<label for="blogbody">Artikkel:</label>
-			<textarea type="text" name="blogbody">{{ post.body }}</textarea>
+			<label for="blogbody">&nbsp;</label>
+			<textarea rows="{{ file.lines }}" type="text" name="blogbody">{{ file.body }}</textarea>
 		</div>
+		{% endif %}
 		<div class="footer"><input type="submit" value="Lagre"><input type="button" class="grey" value="Avbryt"></div>
 	</div>
 </div>

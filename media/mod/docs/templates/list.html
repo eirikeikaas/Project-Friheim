@@ -19,7 +19,7 @@
 							{% if file.type == 'dir' %}
 								<a href="{{ prefix }}/admin/docs/list/{{ file.encoded }}">{{ file.name }}</a>
 							{% else %}
-								{{ file.name }}
+								<span>{{ file.name }}</span>
 							{% endif %}
 						</td>
 						<td>
@@ -31,6 +31,11 @@
 						<td>
 							{{ file.rights }}
 						</td>
+						<td>
+						<div class="tdwrap">
+							<a href="{{ prefix }}/admin/docs/edit/{{ file.encoded }}" class="editbtn"></a>
+						</div>
+					</td>
 					</tr>
 				{% endfor %}
 		</tbody>

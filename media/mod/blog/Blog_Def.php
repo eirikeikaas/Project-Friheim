@@ -52,31 +52,35 @@ class Blog_Def extends Controller{
 
 		////////////////////////////////////////////////
 
-		include_once('Blog.php');
-		$this->blog = new Blog("blog");
+		//include_once('Blog.php');
+		$this->blog = ORM::for_table('blog');
 	}
 
 	public static function install(){
-		$table = System::getConfig('blogTable');
+		/*$table = System::getConfig('blogTable');
 		$table = (empty($table)) ? 'blog' : $table;
-		DB::set("CREATE TABLE IF NOT EXISTS $table (id INT NOT NULL AUTO_INCREMENT ,title VARCHAR(60) NULL ,author INT NULL , timestamp DATETIME NULL , body TEXT NULL , PRIMARY KEY (id) ,UNIQUE INDEX id_UNIQUE (id ASC) )");
+		DB::set("CREATE TABLE IF NOT EXISTS $table (id INT NOT NULL AUTO_INCREMENT ,title VARCHAR(60) NULL ,author INT NULL , timestamp DATETIME NULL , body TEXT NULL , PRIMARY KEY (id) ,UNIQUE INDEX id_UNIQUE (id ASC) )");*/
 	}
 
 	public function preList($app, $params){
-		$posts = $this->blog->getAll(0, 10);
+		$posts = $this->blog->find_many();
 		System::addVars(array('posts' => $posts));
 	}
 
 	public function preEdit($app, $params){
 		$this->runHook($app, 'startForm');
-		$post = $this->blog->getSingle($params['id'], false);
+		$post = $this->blog->where('id', $params['id'])->find_one();
 		System::addVars(array('post' => $post));
 	}
 
 	public function saveEdit($app, $params){
 		$this->runHook($app, 'saveForm');
 
-		if($this->blog->update($app->request()->post('id'),$app->request()->post('blogbody'), $app->request()->post('title'))){
+		$post = $this->blog->find_one($app->request()->post('id'));
+		$post->body = $app->request()->post('blogbody');
+		$post->title = $app->request()->post('title');
+
+		if($post->save()){
 			System::setMessage($app, "Artikkelen ble lagret", true);
 			return true;
 		}else{
@@ -92,7 +96,13 @@ class Blog_Def extends Controller{
 
 	public function saveInsert($app, $params){
 		$this->runHook($app, 'saveForm');
-		if($this->blog->insert($app->request()->post('author'),$app->request()->post('blogbody'), $app->request()->post('title'))){
+
+		$post = $this->blog->create();
+		$post->author = $app->request()->post('author');
+		$post->title = $app->request()->post('title');
+		$post->body = $app->request()->post('blogbody');
+
+		if($post->save()){
 			System::setMessage($app, "Artikkelen ble lagret", true);
 			return true;
 		}else{

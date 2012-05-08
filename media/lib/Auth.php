@@ -320,8 +320,6 @@ class Auth{
 					self::$loginhash = $loginhash = hash('sha256',@$_SESSION[$remote].$this->ua);
 					$q = self::$users->raw_query("SELECT *, CONCAT(firstname, ' ', lastname) AS name FROM {$this->usertable} WHERE loginhash = :loginhash AND email = :email", array('loginhash' => $loginhash, 'email' => $c_email))->find_one();
 
-					print_r(ORM::get_query_log());
-
 					if($q !== false){
 						self::$loggedIn = true;
 						self::$user = $q->as_array();
@@ -506,6 +504,7 @@ class Auth{
 	 */
 	
 	public function ifAdmin($condition, $negative = false){
+		System::log("DEPRECATION WARNING: ifAdmin() will be removed due to abstraction", true);
 		if($negative){
 			if(!$this->isAdmin()){
 				return $condition;

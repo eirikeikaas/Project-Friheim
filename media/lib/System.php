@@ -183,6 +183,27 @@ class System{
 		}
 	}
 
+	public static function moduleDiscovery(){
+		$dir = scandir("media/mod");
+		$dirlen = count($dir);
+
+		for($i=0;$i<$dirlen;$i++){
+			if($dir[$i] == "." || $dir[$i] == ".."){ continue; }
+			self::registerModule($dir[$i]);
+		}
+	}
+
+	/**
+	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * 
+	 * @access private
+	 * @return void
+	 */
+
+	public static function moduleIsActive($name){
+		return self::getModule($name, $false) !== false;
+	}
+
 	/**
 	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
 	 * 
@@ -250,9 +271,9 @@ class System{
 	 * @return void
 	 */
 
-	public static function setRoute($route){
+	public static function setRoute($route, $external = false){
 		System::log("Route has been set to $route");
-		self::$route = $route;
+		self::$route = array($route, $external);
 	}
 
 	/**
@@ -263,8 +284,12 @@ class System{
 	 */
 
 	public static function getRoute(Slim $app){
-		if(!empty(self::$route)){
-			$app->redirect(System::getConfig('prefix')."/".self::$route);
+		if(!empty(self::$route[0])){
+			if(self::$route[1]){
+				$app->redirect(self::$route[0]);
+			}else{
+				$app->redirect(System::getConfig('prefix')."/".self::$route[0]);
+			}
 		}else{
 			return false;
 		}
@@ -303,6 +328,39 @@ class System{
 			$output = self::$config[$var];
 		}
 		return $output;
+	}
+
+	/**
+	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * 
+	 * @access private
+	 * @return void
+	 */
+
+	public static function addOption($key, $type, $default){
+		// TODO: Implement
+	}
+
+	/**
+	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * 
+	 * @access private
+	 * @return void
+	 */
+
+	public static function updateOption($key, $value){
+		// TODO: Implement
+	}
+
+	/**
+	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * 
+	 * @access private
+	 * @return void
+	 */
+
+	public static function deleteOption($key, $value){
+		// TODO: Implement
 	}
 
 	/**
@@ -617,6 +675,15 @@ abstract class Controller{
 	 * @static
 	 * @var array
 	 **/
+	private $filters = array();
+
+	/**
+	 * Walk-around array which holds IP-addresses that can bypass the authentication
+	 *
+	 * @access private
+	 * @static
+	 * @var array
+	 **/
 	private $hooks = array();
 
 	/**
@@ -716,8 +783,14 @@ abstract class Controller{
 	 */
 
 	public function doAction($hook, $action, $app, $parameters = false){
-		$method = $this->actionTable[$action]['hooks'][$hook];
-		System::log("Fetched action $method / ".$method['callback']);
+		if(isset($this->actionTable[$action]['hooks'][$hook]) && !empty($this->actionTable[$action]['hooks'][$hook])){
+			$method = $this->actionTable[$action]['hooks'][$hook];
+		}else{
+			System::log("Action '$action' does not exist");
+			$app->redirect(System::getConfig('prefix').'/admin');
+			return;
+		}
+		System::log("Fetched action '$method' / ".$method['callback']);
 		$isMapped = false;
 
 		System::setUserScripts(@self::$scripts[$action]);
@@ -783,23 +856,28 @@ abstract class Controller{
 			$file = System::getConfig("basedir")."/media/mod/$module/$mod.php";
 
 			if(class_exists($mod) || file_exists($file)){
-				include_once($file);	
+				/*include_once($file);	
 				$mod = new $mod;
-				$mod->addHookInternal($hook, $callback);
+				$mod->addHookInternal($hook, $callback);*/
+				HookManager::addHook($module, $hook, $callback);
 			}else if($failable){
 				System::log("Could not add hook to module $mod");
 			}
 		}else{
-			Controller::$globalhooks[$hook][] = $callback;
+			HookManager::addHook('*', $hook, $callback);
 		}
 	}
 
-	public static function addHookInternal($hook, $callback){
+	public function addHookInternal($hook, $callback){
+		System::log("DEPRECATION WARNING: The new HookManager-class renders this obsolete");
+		HookManager::addHook($this->name, $hook, $callback);
 		$this->hooks[$hook][] = $callback;
 	}
 
 	public function runHook($app, $hook, $params = array()){
 		System::log("Running hook $hook...");
+		HookManager::runHook($this->name, $hook, $app, $params);
+		/*System::log("Running hook $hook...");
 		$hookcount = 0;
 		$data = array("app" => $app);
 		$data = array_merge($data, $params);
@@ -831,6 +909,73 @@ abstract class Controller{
 			}
 		}
 		System::log("$hookcount hooks executed for $hook in {$this->name}");
+		*/
+	}
+
+	/**
+	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * 
+	 * @access private
+	 * @return void
+	 */
+
+	protected function addFilter($module, $filter, $callback, $failable = false){
+		if($module != '*'){
+			$mod = ucfirst($module)."_Def";
+			$file = System::getConfig("basedir")."/media/mod/$module/$mod.php";
+
+			if(class_exists($mod) || file_exists($file)){
+				FilterManager::addFilter($this->name, $filter, $callback, $failable);
+			}else if($failable){
+				System::log("Could not add filter to module $mod");
+			}
+		}else{
+			System::log("Global filters does not make sense..");
+		}
+	}
+
+	/**
+	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * 
+	 * @access private
+	 * @return void
+	 */
+
+	public function addFilterInternal($filter, $callback){
+		System::log("DEPRECATION WARNING: The new FilterManager-class renders this obsolete");
+		FilterManager::addFilter($this->name, $filter, $callback);
+		$this->filter[$filter][] = $callback;
+	}
+
+	/**
+	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * 
+	 * @access private
+	 * @return void
+	 */
+
+	protected function applyFilter($app, $filter, $filterdata){
+		System::log("Running filter $filter...");
+		FilterManager::applyFilter($this->name, $filter, $app, $filterdata);
+		/*System::log("Running filter $filter...");
+		$filtercount = 0;
+		$data = array("app" => $app);
+		$data = array_merge($data, $filterdata);
+
+		if(isset($this->filters[$filter]) && is_array($this->filters[$filter])){
+			foreach($this->filters[$filter] as $thefilter){
+				if(is_callable($thefilter)){
+					$filtercount++;
+
+					if($thefilter instanceof Closure){
+						$filterdata = $thefilter($data);
+					}else{
+						$filterdata = call_user_func_array($thefilter, array($data));
+					}
+				}
+			}
+		}*/
+		//System::log("$filtercount filters executed for $filter in {$this->name}");
 	}
 
 	/**
@@ -879,6 +1024,125 @@ abstract class Controller{
 	}
 }
 
+class HookManager{
+	private static $hooks = array();
+
+	/**
+	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * 
+	 * @access private
+	 * @return void
+	 */
+
+	public static function addHook($namespace, $name, $callback, $failable = false){
+		if(is_callable($callback)){
+			if(!isset(self::$hooks[$namespace])){ self::$hooks[$namespace] = array(); }
+			self::$hooks[$namespace][$name][] = $callback;
+		}else{
+			System::log("$namespace::$name callback is not callable");
+		}
+	}
+
+	/**
+	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * 
+	 * @access private
+	 * @return void
+	 */
+
+	public static function runHook($namespace, $hook, $app, $params){
+		System::log("Running hook $hook...");
+		$hookcount = 0;
+		$data = array("app" => $app);
+		$data = array_merge($data, $params);
+
+		if($namespace === '*'){
+			System::log("You cannot call the global hooks, these are called automagifantastically.");
+			return;
+		}
+
+		if(isset(self::$hooks['*'][$hook]) && is_array(self::$hooks['*'][$hook])){
+			foreach(self::$hooks['*'][$hook] as $thehook){
+				if(is_callable($thehook)){
+					$hookcount++;
+
+					if($thehook instanceof Closure){
+						$thehook($data);
+					}else{
+						call_user_func_array($thehook, array($data));
+					}
+				}
+			}
+		}
+		if(isset(self::$hooks[$namespace][$hook]) && is_array(self::$hooks[$namespace][$hook])){
+			foreach(self::$hooks[$namespace][$hook] as $thehook){
+				if(is_callable($thehook)){
+					$hookcount++;
+
+					if($thehook instanceof Closure){
+						$thehook($data);
+					}else{
+						call_user_func_array($thehook, array($data));
+					}
+				}
+			}
+		}
+		System::log("$hookcount hooks executed for $hook in $namespace");
+	}
+}
+
+class FilterManager{
+	private static $filters = array();
+
+	/**
+	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * 
+	 * @access private
+	 * @return void
+	 */
+
+	public static function addFilter($namespace, $name, $callback, $failable = false){
+		if(is_callable($callback)){
+			if(!isset(self::$filters[$namespace])){ self::$filters[$namespace] = array(); }
+			self::$filters[$namespace][$name][] = $callback;
+		}else{
+			System::log("$namespace::$name callback is not callable");
+		}
+	}
+
+	/**
+	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * 
+	 * @access private
+	 * @return void
+	 */
+
+	public static function applyFilter($namespace, $name, $app, &$filterdata){
+		System::log("Running filter $name in $namespace...");
+		$filtercount = 0;
+		$data = array("app" => $app);
+		$data = array_merge($data, $filterdata);
+
+		if(isset(self::$filters[$namespace][$name]) && is_array(self::$filters[$namespace][$name])){
+			foreach(self::$filters[$namespace][$name] as $thefilter){
+				if(is_callable($thefilter)){
+					$filtercount++;
+
+					if($thefilter instanceof Closure){
+						$filterdata = $thefilter($data);
+					}else{
+						$filterdata = call_user_func_array($thefilter, array($data));
+					}
+				}
+			}
+		}
+		System::log("$filtercount filters executed for $name in $namespace");
+	}
+}
+
+/*
+SHOULD BE DEPRECATED ASAP
+*/
 abstract class Model{
 	private $table = "";
 

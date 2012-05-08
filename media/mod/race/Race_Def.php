@@ -8,38 +8,45 @@
  * @author 
  **/
 
-class Users_Def extends Controller{
-	private $users = false;
+class Race_Def extends Controller{
+	private $race = false;
 
 	public function __construct(){
-		$this->info("Users", "users", "0.1a");
+		$this->info("Race", "race", "0.1a");
 
 		// ACTIONS ////////////////////////////////////
 
-		$this->defineAction("list", "list.html", array(
-			"pre" => "preList"
+		$this->defineAction("stats", "stats.html", array(
+			"pre" => "preStats"
 		));
 
-		$this->defineAction("edit", "edit.html", array(
+		$this->defineAction("history", "history.html", array(
 			"pre" => array(
-				"callback" => "preEdit",
+				"callback" => "preHistory",
 				"parameterMap" => array(
 					"id" => true
 				)
 			),
-			"save" => "saveEdit"
 		));
 
-		$this->defineAction("insert", "insert.html", array(
-			"save" => "saveInsert"
+		$this->defineAction("new", "new.html", array(
+			"save" => "saveNew"
 		));
 
 		///////////////////////////////////////////////
 
-		$this->defineTab("Brukere", "users", "admin/users/list", 11, true);
+		$this->defineTab("Legg til", "race", "admin/race/new", 13, true, 1);
+		$this->defineTab("Historikk", "race", "admin/race/history", 1, true);
+		$this->defineTab("Statistikk", "race", "admin/race/stats", 7, true);
+
+		///////////////////////////////////////////////
+
+		$this->addFilter("users", "list", function($data){
+			return $data;
+		}, true);
 
 		//include_once('Users.php');
-		$this->users = ORM::for_table('users');
+		$this->race = ORM::for_table('race_points');
 	}
 
 	public static function install(){
@@ -49,26 +56,25 @@ class Users_Def extends Controller{
 		*/
 	}
 
-	public function preList($app, $params){
-		$usersorm = $this->users->find_many();
+	public function preStats($app, $params){
+		$usersorm = $this->race->find_many();
 		$users = array();
 		foreach($usersorm as $user){
-			$array = $user->as_array();
-			$this->applyFilter($app, 'list', $array);
-			$users[] = $array;
+			$users[] = $user->as_array();
 		}
+		print_r($users);
 		System::addVars(array('users' => $users));
 	}
 
-	public function preEdit($app, $params){
+	public function preHistory($app, $params){
 		$this->runHook($app, 'startForm');
-		$post = $this->users->find_one($params['id']);
+		$post = $this->race->find_one($params['id']);
 		System::addVars(array('post' => $post));
 	}
 
-	public function saveEdit($app, $params){
+	/*public function saveEdit($app, $params){
 		$this->runHook($app, 'saveForm');
-		if($this->users->update($app->request()->post('id'),$app->request()->post('blogbody'), $app->request()->post('title'))){
+		if($this->race->update($app->request()->post('id'),$app->request()->post('blogbody'), $app->request()->post('title'))){
 			System::setMessage($app, "Artikkelen ble lagret");
 			return true;
 		}else{
@@ -76,11 +82,11 @@ class Users_Def extends Controller{
 			System::log("Could not save?");
 			return false;
 		}
-	}
+	}*/
 
-	public function saveInsert($app, $params){
+	public function saveNew($app, $params){
 		$this->runHook($app, 'saveForm');
-		if($this->users->update($app->request()->post('id'),$app->request()->post('blogbody'), $app->request()->post('title'))){
+		if($this->race->update($app->request()->post('id'),$app->request()->post('blogbody'), $app->request()->post('title'))){
 			System::setMessage($app, "Artikkelen ble lagret");
 			return true;
 		}else{

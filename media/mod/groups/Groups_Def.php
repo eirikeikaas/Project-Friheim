@@ -38,14 +38,15 @@ class Groups_Def extends Controller{
 
 		$this->defineTab("Grupper", "groups", "admin/groups/list", 2, true, 6);
 
-		include_once('Groups.php');
-		$this->groups = new Groups("groups");
+		//include_once('Groups.php');
+		//$this->groups = new Groups("groups");
+		$this->groups = ORM::for_table("Groups");
 	}
 
 	public static function install(){
-		$table = System::getConfig('usersTable');
+		/*$table = System::getConfig('usersTable');
 		$table = (empty($table)) ? 'users' : $table;
-		DB::set("CREATE TABLE IF NOT EXISTS $table (id INT NOT NULL AUTO_INCREMENT ,title VARCHAR(60) NULL ,author INT NULL , timestamp DATETIME NULL , body TEXT NULL , PRIMARY KEY (id) ,UNIQUE INDEX id_UNIQUE (id ASC) )");
+		DB::set("CREATE TABLE IF NOT EXISTS $table (id INT NOT NULL AUTO_INCREMENT ,title VARCHAR(60) NULL ,author INT NULL , timestamp DATETIME NULL , body TEXT NULL , PRIMARY KEY (id) ,UNIQUE INDEX id_UNIQUE (id ASC) )");*/
 	}
 
 	public function preList($app, $params){

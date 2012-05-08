@@ -108,6 +108,8 @@ class DB{
 	 * @return MySQLi_Result
 	 */
 	public static function set($query){
+		System::log($query);
+		System::log("DEPRECATION WARNING: MySQLi is bound to be replaced by Idiorm", true);
 		self::initiate();
 		if(preg_match("/^(SELECT|SHOW|DESCRIBE|EXPLAIN).*$/",$query) > 0){
 			die("DB::set() will not handle SELECT, SHOW, DESCRIBE or EXPLAIN queries");

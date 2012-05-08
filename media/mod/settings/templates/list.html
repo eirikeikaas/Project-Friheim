@@ -2,21 +2,25 @@
 <div id="content">
 	<div class="block">
 		<h2>
-			Grupper
+			Brukere
 			<a href="{{ prefix }}/admin/users/insert" class="hbtn">
-				Legg til ny gruppe<img src="{{ prefix }}/media/img/act/1.png">
+				Legg til ny bruker<img src="{{ prefix }}/media/img/act/4.png">
 			</a>
 		</h2>
 		<table>
 			<tbody>
-				{% for group in groups %}
+				{% for user in users %}
 				<tr>
 					<td>{{ user.name }}</td>
 					<td>{{ user.admin }}</td>
+					{% if usegroups %}
+						<td>{{ user.group }}</td>
+					{% endif %}
 					<td>
 						<div class="tdwrap">
-							<a href="{{ prefix }}/admin/groups/edit/{{ user.id }}" class="editbtn"></a>
+							<a href="{{ prefix }}/admin/users/edit/{{ user.id }}" class="editbtn"></a>
 						</div>
+					</td>
 				</tr>
 				{% endfor %}
 			</tbody>

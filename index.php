@@ -45,13 +45,7 @@ $prefix = System::getConfig('prefix');
 
 ////////////////// AUTO MODULE-DISCOVERY /////////////////////////
 
-$dir = scandir("media/mod");
-$dirlen = count($dir);
-
-for($i=0;$i<$dirlen;$i++){
-	if($dir[$i] == "." || $dir[$i] == ".."){ continue; }
-	$sys->registerModule($dir[$i]);
-}
+System::moduleDiscovery();
 
 //////////////////////////////////////////////////////////////////
 

@@ -49,11 +49,6 @@ System::moduleDiscovery();
 
 //////////////////////////////////////////////////////////////////
 
-// Handle static index
-$app->get('/', function(){
-	include('static/index.html');
-});
-
 // Handle login
 $app->post('/admin/login(/)', function() use($a, $app, $prefix){
 	if($a->login($app->request()->post('brid'),$app->request()->post('pswd')) !== true){
@@ -125,6 +120,31 @@ $app->post('/admin/:module/:action/save(/)', function($module, $action) use($a, 
 		}
 	}
 });
+
+// Handle static index
+$app->get('/(:route)', function($route = "") use($app){
+	
+	$static = System::getConfig("staticindex");
+	$static = !empty($static) && file_exists($static) ? $static : 'static/index.html';
+	
+	include($static);
+	
+	/////////////////////////////////////////////////////////////
+	
+	$cb = System::getConfig("staticmanager");
+	if(!empty($cb)){
+		if(is_callable($cb)){
+			$route = substr($route, -1) == "/" ? substr($route, 0, -1) : $route; 
+			if($cb instanceof Closure){
+				$cb($route, $app);
+			}else{
+				call_user_func_array($cb, array($route, $app));
+			}
+		}else{
+			System::log("Callback for static is not callable!");
+		}
+	}
+})->conditions(array('route' => '.*'));
 
 $app->run();
 

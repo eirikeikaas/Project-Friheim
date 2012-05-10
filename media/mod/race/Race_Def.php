@@ -35,7 +35,7 @@ class Race_Def extends Controller{
 
 		///////////////////////////////////////////////
 
-		$this->defineTab("Legg til", "race", "admin/race/new", 13, true, 1);
+		$this->defineTab("Legg til", "race", "admin/race/new", 13, true, -1);
 		$this->defineTab("Historikk", "race", "admin/race/history", 1, true);
 		$this->defineTab("Statistikk", "race", "admin/race/stats", 7, true);
 
@@ -46,7 +46,7 @@ class Race_Def extends Controller{
 		}, true);
 
 		//include_once('Users.php');
-		$this->race = ORM::for_table('race_points');
+		//$this->race = ORM::for_table('race_points');
 	}
 
 	public static function install(){

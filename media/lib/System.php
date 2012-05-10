@@ -53,6 +53,7 @@ class System{
 	 * User array
 	 *
 	 * @access private
+	 * @static
 	 * @var array
 	 **/
 	private static $user = -1;
@@ -61,6 +62,7 @@ class System{
 	 * Template-variables array
 	 *
 	 * @access private
+	 * @static
 	 * @var array
 	 **/
 	private static $vars = array();
@@ -69,22 +71,25 @@ class System{
 	 * Template-scripts array
 	 *
 	 * @access private
+	 * @static
 	 * @var array
 	 **/
 	private static $scripts = array();
 
 	/**
-	 * Template-scripts array
+	 * User-scripts array
 	 *
 	 * @access private
+	 * @static
 	 * @var array
 	 **/
 	private static $userScripts = array();
 
 	/**
-	 * Template-scripts array
+	 * Temporary storage for redirection-route
 	 *
 	 * @access private
+	 * @static
 	 * @var array
 	 **/
 	private static $route = "";
@@ -92,7 +97,7 @@ class System{
 	/**
 	 * The construct parses the .ini file
 	 * 
-	 * @access private
+	 * @access public
 	 * @param $inifile string
 	 * @return void
 	 */
@@ -100,47 +105,83 @@ class System{
 	public function __construct($inifile){
 		self::$config = parse_ini_file($inifile);
 	}
+	
+	/**
+	 * Writes .ini-file
+	 * 
+	 * @access public
+	 * @static
+	 * @param $file string
+	 * @$options array
+	 * @return void
+	 */
+	
+	public static function write_ini_file($file, array $options){
+		$tmp = '';
+		foreach($options as $section => $values){
+			$tmp .= "[$section]\n";
+			foreach($values as $key => $val){
+				if(is_array($val)){
+					foreach($val as $k =>$v){
+						$tmp .= "{$key}[$k] = \"$v\"\n";
+					}
+				}else{
+					$tmp .= "$key = \"$val\"\n";
+				}
+			}
+			$tmp .= "\n";
+		}
+		file_put_contents($file, $tmp);
+		unset($tmp);
+	}
 
 	/**
-	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * Registers a module to System::$modules
 	 * 
-	 * @access private
-	 * @return void
+	 * @access public
+	 * @static
+	 * @param $name string
+	 * @return boolean
 	 */
 
 	public static function registerModule($name){
-		$file = System::getConfig("basedir")."/media/mod/$name/".ucfirst($name)."_Def.php";
-		$module = array();
+		if(self::moduleIsActive($name)){
+			$file = System::getConfig("basedir")."/media/mod/$name/".ucfirst($name)."_Def.php";
+			$module = array();
+	
+			if(file_exists($file)){
+				$module['name'] = ucfirst($name);
+				$module['slug'] = strtolower($name);
+	
+				self::$modules[$module['name']] = $module;
 
-		if(file_exists($file)){
-			$module['name'] = ucfirst($name);
-			$module['slug'] = strtolower($name);
+				include_once($file);
 
-			self::$modules[$module['name']] = $module;
-
-			include_once($file);
-
-			$class = ucfirst($name)."_Def";
-			if(class_exists($class)){
-				$class = new $class;
-				$tabs = $class->getTabs();
-				$tabslen = count($tabs);
-
-				for($i=0;$i<$tabslen;$i++){
-					array_push(self::$tabs, $tabs[$i]);
+				$class = ucfirst($name)."_Def";
+				if(class_exists($class)){
+					$class = new $class;
+					$tabs = $class->getTabs();
+					$tabslen = count($tabs);
+	
+					for($i=0;$i<$tabslen;$i++){
+						array_push(self::$tabs, $tabs[$i]);
+					}
+	
+					return true;
 				}
-
-				return true;
+			}else{
+				return false;
 			}
 		}else{
-			return false;
+			System::log("Excluded module $name");
 		}
 	}
 
 	/**
-	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * Installs modules by running [instance]::install()
 	 * 
-	 * @access private
+	 * @access public
+	 * @static
 	 * @return void
 	 */
 
@@ -158,13 +199,17 @@ class System{
 	}
 
 	/**
-	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * Finds a registered module and instantiates it
 	 * 
-	 * @access private
-	 * @return void
+	 * @access public
+	 * @static
+	 * @param $name string
+	 * @pararm $instantiate bool
+	 * @return mixed
 	 */
 
 	public static function getModule($name, $instantiate = true){
+		$name = strtolower($name);
 		$file = System::getConfig("basedir")."/media/mod/$name/".ucfirst($name)."_Def.php";
 
 		if(!empty($name) && array_key_exists(ucfirst($name), self::$modules)){
@@ -182,6 +227,38 @@ class System{
 			return false;
 		}
 	}
+	
+	public static function loadEndpoint($name, $alias = "", $instantiate = false){
+		$name = strtolower($name);
+		$file = System::getConfig("basedir")."/media/mod/$name/".ucfirst($name)."_Endpoint.php";
+				
+		if(!empty($name) && array_key_exists(ucfirst($name), self::$modules)){
+			include_once($file);
+			$class = ucfirst($name)."_Endpoint";
+
+			if(class_exists($class) && get_parent_class($class) == "Endpoint"){
+				if(!empty($alias)){
+					class_alias($class, $alias);
+				}
+			
+				if(!$instantiate){
+					return $class;
+				}else{
+					return new $class;
+				}
+			}
+		}else{
+			return false;
+		}
+	}
+	
+	/**
+	 * Finds available modules in modules directory and stores them in System::$modules
+	 * 
+	 * @access public
+	 * @static
+	 * @return void
+	 */
 
 	public static function moduleDiscovery(){
 		$dir = scandir("media/mod");
@@ -194,20 +271,23 @@ class System{
 	}
 
 	/**
-	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * Checks whether or not a module is active
 	 * 
-	 * @access private
-	 * @return void
+	 * @todo Truly implement this..
+	 * @access public
+	 * @static
+	 * @param $name string
+	 * @return Controller
 	 */
 
 	public static function moduleIsActive($name){
-		return self::getModule($name, $false) !== false;
+		return array_search(strtolower($name), explode(",",trim(strtolower(System::getConfig('excludeModules'))))) === false;
 	}
 
 	/**
-	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * Registers auth-instance to System::$auth
 	 * 
-	 * @access private
+	 * @access public
 	 * @return void
 	 */
 
@@ -216,14 +296,21 @@ class System{
 	}
 
 	/**
-	 *
+	 * logs errors and warnings to log-file
+	 * 
+	 * @access public
+	 * @static
+	 * @param $msg string
+	 * @param $trace boolean
+	 * @param $full boolean
+	 * @return void
 	 */
 
 	public static function log($msg, $trace = false, $full = false){
 		$bt = debug_backtrace();
 		$f = fopen(System::getConfig('logfile'),'a+');
 		if($f!==false){
-			$time = date('[dmY-h:i:s]');
+			$time = date('[dmY-H:i:s]');
 			if($trace){
 				if(!$full){
 				$backtrace = "";
@@ -265,9 +352,12 @@ class System{
 	}
 
 	/**
-	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * Temporarily stores the redirection routing
 	 * 
-	 * @access private
+	 * @access public
+	 * @static
+	 * @param $route string
+	 * @param $external boolean
 	 * @return void
 	 */
 
@@ -277,10 +367,12 @@ class System{
 	}
 
 	/**
-	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * Does the actual redirection based on System::$route
 	 * 
-	 * @access private
-	 * @return void
+	 * @access public
+	 * @static
+	 * @param $app Slim
+	 * @return boolean
 	 */
 
 	public static function getRoute(Slim $app){
@@ -296,9 +388,13 @@ class System{
 	}
 
 	/**
-	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * Sets a flash-message for Slim
 	 * 
-	 * @access private
+	 * @access public
+	 * @static
+	 * @param $app Slim
+	 * @param $message string
+	 * @param $success boolean
 	 * @return void
 	 */
 
@@ -308,10 +404,12 @@ class System{
 	}
 
 	/**
-	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * Returns config-variables from System::$config array
 	 * 
-	 * @access private
-	 * @return void
+	 * @access public
+	 * @static
+	 * @param $var string
+	 * @return mixed
 	 */
 
 	public static function getConfig($var){
@@ -325,7 +423,12 @@ class System{
 
 			$output = $cur;
 		}else{
-			$output = self::$config[$var];
+			if(isset(self::$config[$var]) && !empty(self::$config[$var])){
+				$output = self::$config[$var];
+			}else{
+				System::log("Var '$var' does not exist in configfile");
+				return false;
+			}
 		}
 		return $output;
 	}
@@ -337,8 +440,17 @@ class System{
 	 * @return void
 	 */
 
-	public static function addOption($key, $type, $default){
-		// TODO: Implement
+	public static function addOption($key, $type, $human, $default){
+		if(class_exists("ORM")){
+			$option = ORM::for_table(System::getConfig('settingstable'))->create();
+			$option->key = $key;
+			$option->human = $human;
+			$option->type = $type;
+			$option->value = $default;
+			$option->save();
+		}else{
+			self::log("Calling a DB-function before the ORM-class is defined is just silly..");
+		}
 	}
 
 	/**
@@ -348,8 +460,36 @@ class System{
 	 * @return void
 	 */
 
-	public static function updateOption($key, $value){
-		// TODO: Implement
+	public static function getOption($key){
+		if(class_exists("ORM")){
+			$option = ORM::for_table(System::getConfig('settingstable'))->where('key', $key)->find_one();
+			if($option !== false){
+				return $option->value;
+			}else{
+				System::log("Option was not found", true);
+				return false;
+			}
+		}else{
+			self::log("Calling a DB-function before the ORM-class is defined is just silly..");
+		}
+	}
+	
+	/**
+	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * 
+	 * @access private
+	 * @return void
+	 */
+
+	public static function updateOption($key, $value, $human = ""){
+		if(class_exists("ORM")){
+			$option = ORM::for_table(System::getConfig('settingstable'))->where('key', $key)->find_one();
+			if($human != ""){ $option->human = $human; }
+			$option->value = value;
+			$option->save();
+		}else{
+			self::log("Calling a DB-function before the ORM-class is defined is just silly..");
+		}
 	}
 
 	/**
@@ -359,8 +499,13 @@ class System{
 	 * @return void
 	 */
 
-	public static function deleteOption($key, $value){
-		// TODO: Implement
+	public static function deleteOption($key){
+		if(class_exists("ORM")){
+			$option = ORM::for_table(System::getConfig('settingstable'))->where('key', $key)->find_one();
+			$option->delete();
+		}else{
+			self::log("Calling a DB-function before the ORM-class is defined is just silly..");
+		}
 	}
 
 	/**
@@ -399,7 +544,7 @@ class System{
 	public static function vars($app, $vars = array()){
 		$system = array();
 
-		$system['title'] = self::getConfig('title');
+		$system['title'] = self::getOption('title');
 		$system['prefix'] = self::getConfig('prefix');
 		$system['debug'] = self::isDebug();
 		$system['debugdata'] = self::debugData($app);
@@ -407,10 +552,32 @@ class System{
 		$system['user'] = self::$auth->userData();
 		$system['user']['admin'] = self::$auth->isAdmin();
 		$system['user']['loggedin'] = self::$auth->isLoggedIn();
-		$system['tabs'] = self::$tabs;
+		$system['tabs'] = self::sortedTabs();
 		$system['scripts'] = array_merge(self::$scripts, self::$userScripts);
 
 		return array_merge($system, self::$vars, $vars);
+	}
+
+	/**
+	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * 
+	 * @access private
+	 * @return void
+	 */
+
+	public static function sortedTabs(){
+		$tabs = self::$tabs;
+		$keys = array();
+		$rest = array();
+		
+		foreach($tabs as $tab){
+			$keys[] = $tab['index'];
+			$rest[] = $tab;
+		}
+		
+		array_multisort($keys, SORT_ASC, $rest);
+		
+		return $rest;
 	}
 
 	/**
@@ -587,7 +754,6 @@ class System{
 
 		$difference = round($difference);
 		if($difference != 1) {
-//			$periods[$j] .= "s"; // plural for English language
 			$periods = array("sekunder", "minutter", "timer", "dager", "uker", "måneder", "år", "tiår"); // plural for international words
 		}
 		return "$difference $periods[$j] {$tense}";
@@ -749,8 +915,13 @@ abstract class Controller{
 			$index[$key] = $val['index'];
 			$data[$key] = $val;
 		}
+		
+		System::log(var_export($data, true));
 
 		array_multisort($index, SORT_ASC, $data);
+		
+		System::log(var_export($data, true));
+		
 		return $data;
 	}
 
@@ -856,9 +1027,6 @@ abstract class Controller{
 			$file = System::getConfig("basedir")."/media/mod/$module/$mod.php";
 
 			if(class_exists($mod) || file_exists($file)){
-				/*include_once($file);	
-				$mod = new $mod;
-				$mod->addHookInternal($hook, $callback);*/
 				HookManager::addHook($module, $hook, $callback);
 			}else if($failable){
 				System::log("Could not add hook to module $mod");
@@ -877,39 +1045,6 @@ abstract class Controller{
 	public function runHook($app, $hook, $params = array()){
 		System::log("Running hook $hook...");
 		HookManager::runHook($this->name, $hook, $app, $params);
-		/*System::log("Running hook $hook...");
-		$hookcount = 0;
-		$data = array("app" => $app);
-		$data = array_merge($data, $params);
-
-		if(isset(Controller::$globalhooks[$hook]) && is_array(Controller::$globalhooks[$hook])){
-			foreach(Controller::$globalhooks[$hook] as $thehook){
-				if(is_callable($thehook)){
-					$hookcount++;
-
-					if($thehook instanceof Closure){
-						$thehook($data);
-					}else{
-						call_user_func_array($thehook, array($data));
-					}
-				}
-			}
-		}
-		if(isset($this->hooks[$hook]) && is_array($this->hooks[$hook])){
-			foreach($this->hooks[$hook] as $thehook){
-				if(is_callable($thehook)){
-					$hookcount++;
-
-					if($thehook instanceof Closure){
-						$thehook($data);
-					}else{
-						call_user_func_array($thehook, array($data));
-					}
-				}
-			}
-		}
-		System::log("$hookcount hooks executed for $hook in {$this->name}");
-		*/
 	}
 
 	/**
@@ -957,25 +1092,6 @@ abstract class Controller{
 	protected function applyFilter($app, $filter, $filterdata){
 		System::log("Running filter $filter...");
 		FilterManager::applyFilter($this->name, $filter, $app, $filterdata);
-		/*System::log("Running filter $filter...");
-		$filtercount = 0;
-		$data = array("app" => $app);
-		$data = array_merge($data, $filterdata);
-
-		if(isset($this->filters[$filter]) && is_array($this->filters[$filter])){
-			foreach($this->filters[$filter] as $thefilter){
-				if(is_callable($thefilter)){
-					$filtercount++;
-
-					if($thefilter instanceof Closure){
-						$filterdata = $thefilter($data);
-					}else{
-						$filterdata = call_user_func_array($thefilter, array($data));
-					}
-				}
-			}
-		}*/
-		//System::log("$filtercount filters executed for $filter in {$this->name}");
 	}
 
 	/**
@@ -1021,6 +1137,15 @@ abstract class Controller{
 				"link" => $link
 			);
 		}
+	}
+	
+	protected function loadHelper(){
+		$file = System::getConfig("basedir")."/media/mod/".ucfirst($this->name)."_Helper.php";
+		if(file_exists($file)){
+			include_once($file);
+			return true;
+		}
+		return false;
 	}
 }
 
@@ -1155,6 +1280,7 @@ abstract class Model{
 	}
 
 	public function getAll($offset = 0, $limit = 10, $join = false){
+		System::log("DEPRECATION WARNING: The Model-class is due for removal", true);
 		$c_offset = DB::escape($offset);
 		$c_limit = DB::escape($limit);	
 		$t = $this->table;
@@ -1163,6 +1289,7 @@ abstract class Model{
 	}
 
 	public function getSingle($id, $join = false){
+		System::log("DEPRECATION WARNING: The Model-class is due for removal", true);
 		$c_id = DB::escape($id);
 		$t = $this->table;
 		$res = DB::get("SELECT * FROM $t WHERE id = $c_id LIMIT 1");
@@ -1170,6 +1297,7 @@ abstract class Model{
 	}
 
 	private function formatJoin($join){
+		System::log("DEPRECATION WARNING: The Model-class is due for removal", true);
 		$formatted = "";
 		$len = count($join);
 
@@ -1192,5 +1320,53 @@ abstract class Model{
 		return $formatted;
 	}
 }
+
+abstract class Helper{
+	private $name = "";
+	private $slug = "";
+	private $version = "";
+
+	/**
+	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * 
+	 * @access private
+	 * @return void
+	 */
+
+	protected function info($name, $slug, $version){
+		$this->name = $name;
+		$this->slug = $slug;
+		$this->version = $version;
+	}
+}
+
+abstract class Endpoint{
+	private $name = "";
+	private $slug = "";
+	private $version = "";
+	
+	protected function loadHelper(){
+		$file = System::getConfig("basedir")."/media/mod/".strtolower($this->name)."/".ucfirst($this->name)."_Helper.php";
+		if(file_exists($file)){
+			include_once($file);
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
+	 * 
+	 * @access private
+	 * @return void
+	 */
+
+	protected function info($name, $slug, $version){
+		$this->name = $name;
+		$this->slug = $slug;
+		$this->version = $version;
+	}
+}
+
 
 ?>

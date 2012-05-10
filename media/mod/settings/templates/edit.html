@@ -1,12 +1,22 @@
 {% include "templates/header.html" %}
 <div id="content">
-	<form class="block" action="{{ prefix }}/admin/blog/edit/save" method="post">
+	<form class="block" action="{{ prefix }}/admin/settings/edit/save" method="post">
+		<input type="hidden" name="key" value="{{ key }}">
+		
 		<h2>
-			Rediger artikkel
+			Instillinger
 		</h2>
 		<div class="line">
-			<label for="title">Tittel</label><input type="text" name="title" value="{{ post.title }}">
+			{% for var in settings %}
+				<label for="{{ var.key }}">{{ var.human }}</label>
+				{% if var.type == "string" %}
+					<input type="text" name="{{ var.key }}" value="{{ var.value }}">
+				{% elseif var.type == "boolean" %}
+					<input type="checkbox" name="{{ var.key }}" {% if var.value == "true" %}checked="checked"{% endif %} value="true">
+				{% endif %}
+			{% endfor %}
 		</div>
+		<div class="footer"><input type="submit" value="Lagre"><input type="button" class="grey" value="Avbryt"></div>
 	</div>
 </div>
 {% include "templates/footer.html" %}

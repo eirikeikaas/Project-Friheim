@@ -26,8 +26,8 @@ class Settings_Helper extends Helper{
 	 * @return void
 	 */
 
-	public static function add($key, $type, $human, $default){
-		return System::addOption($key, $type, $human, $default);
+	public static function add($key, $type, $default){
+		System::addOption($key, $type, $default);
 	}
 
 	/**
@@ -41,8 +41,8 @@ class Settings_Helper extends Helper{
 	 * @return void
 	 */
 
-	public static function set($key, $value, $human = ""){
-		return System::updateOption($key, $value, $human);
+	public static function set($key, $value){
+		System::updateOption($key, $value);
 	}
 
 	/**
@@ -55,8 +55,8 @@ class Settings_Helper extends Helper{
 	 * @return void
 	 */
 
-	public static function del($key){
-		return System::deleteOption($key);
+	public static function delete($key){
+		System::deleteOption($key);
 	}
 	
 	/**
@@ -70,6 +70,6 @@ class Settings_Helper extends Helper{
 	 */
 
 	public static function get($key){
-		return System::getOption($key);
+		System::getOption($key);
 	}
 }

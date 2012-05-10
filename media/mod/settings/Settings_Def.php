@@ -12,7 +12,8 @@ class Settings_Def extends Controller{
 	private $users = false;
 
 	public function __construct(){
-		$this->info("Users", "users", "0.1a");
+		$this->info("Settings", "settings", "0.1a");
+		$this->loadHelper();
 
 		// ACTIONS ////////////////////////////////////
 
@@ -26,10 +27,7 @@ class Settings_Def extends Controller{
 
 		///////////////////////////////////////////////
 
-		$this->defineTab("Instillinger", "settings", "admin/settings/edit", 4, true);
-
-		//include_once('Users.php');
-		$this->users = ORM::for_table('users');
+		$this->defineTab("Instillinger", "settings", "admin/settings/edit", 4, true, 999);
 	}
 
 	public static function install(){
@@ -39,13 +37,24 @@ class Settings_Def extends Controller{
 		*/
 	}
 
-	public function preList($app, $params){
-		$usersorm = $this->users->find_many();
-		$users = array();
-		foreach($usersorm as $user){
-			$users[] = $user->as_array();
+	public function preEdit($app, $params){
+		$this->runHook($app, "startForm");
+		$settings = ORM::for_table(System::getConfig('settingstable'))->find_many();
+		System::addVars(array('settings' => $settings));
+	}
+
+	public function saveEdit($app, $params){
+		$this->runHook($app, "saveForm");
+		$posts = $app->request()->post();
+		
+		foreach($posts as $postk => $postv){
+			$row = ORM::for_table(System::getConfig('settingstable'))->where('key', $postk)->find_one();
+			if($row !== false){
+				$row->value = $postv;
+				$row->save();
+			}
 		}
-		print_r($users);
-		System::addVars(array('users' => $users));
+		
+		System::setMessage($app, "Innstillingene ble lagret");
 	}
 }

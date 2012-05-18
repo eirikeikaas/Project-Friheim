@@ -144,6 +144,7 @@ $app->get('/(:route)', function($route = "") use($app){
 			System::log("Callback for static is not callable!");
 		}
 	}
+	
 })->conditions(array('route' => '.*'));
 
 $app->run();

@@ -30,6 +30,7 @@ class Race_Def extends Controller{
 		));
 
 		$this->defineAction("new", "new.html", array(
+			"pre" => "preNew",
 			"save" => "saveNew"
 		));
 
@@ -44,6 +45,64 @@ class Race_Def extends Controller{
 		$this->addFilter("users", "list", function($data){
 			return $data;
 		}, true);
+		
+		///////////////////////////////////////////////
+
+		$this->addHook("users", "insert", function($data){
+			return true;
+		});
+		
+		///////////////////////////////////////////////
+		
+		$this->defineScript(array("new", "stats"), "javascript", "https://www.google.com/jsapi");
+		$this->defineScript("new", "javascript", "google.load('visualization', '1', {packages:['corechart']});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+          ['Year', 'Sales'],
+          ['2004',  1000],
+          ['2005',  1170],
+          ['2006',  660],
+          ['2007',  1030],
+          ['2004',  1000],
+          ['2005',  1170],
+          ['2006',  660],
+          ['2007',  1030],
+          ['2004',  1000],
+          ['2005',  1170],
+          ['2006',  660],
+          ['2007',  1030],
+          ['2004',  1000],
+          ['2005',  1170],
+          ['2006',  660],
+          ['2007',  1030],
+          ['2004',  1000],
+          ['2005',  1170],
+          ['2006',  660],
+          ['2007',  1030],
+          ['2004',  1000],
+          ['2005',  1170],
+          ['2006',  660],
+          ['2007',  1030],
+          ['2004',  1000],
+          ['2005',  1170],
+          ['2006',  660],
+          ['2007',  1030]
+        ]);
+
+        var options = {
+        	legend: { position: 'none' },
+        	chartArea:{left:00,top:0,width:'100%',height:'100%'},
+        	hAxis: { textPosition: 'none' },
+        	vAxis: { textPosition: 'none', baselineColor: '#d0d0d0' },
+        	colors:['#30aec0'],
+        	pointSize: 4
+        };
+
+        var chart = new google.visualization.AreaChart(document.getElementById('graph'));
+        chart.draw(data, options);
+      }", false);
+		
 
 		//include_once('Users.php');
 		//$this->race = ORM::for_table('race_points');
@@ -57,19 +116,19 @@ class Race_Def extends Controller{
 	}
 
 	public function preStats($app, $params){
-		$usersorm = $this->race->find_many();
+		/*$usersorm = $this->race->find_many();
 		$users = array();
 		foreach($usersorm as $user){
 			$users[] = $user->as_array();
 		}
 		print_r($users);
-		System::addVars(array('users' => $users));
+		System::addVars(array('users' => $users));*/
 	}
 
 	public function preHistory($app, $params){
 		$this->runHook($app, 'startForm');
-		$post = $this->race->find_one($params['id']);
-		System::addVars(array('post' => $post));
+		/*$post = $this->race->find_one($params['id']);
+		System::addVars(array('post' => $post));*/
 	}
 
 	/*public function saveEdit($app, $params){
@@ -83,6 +142,12 @@ class Race_Def extends Controller{
 			return false;
 		}
 	}*/
+	
+	public function preNew($app, $params){
+		$this->runHook($app, 'startForm');
+		
+		
+	}
 
 	public function saveNew($app, $params){
 		$this->runHook($app, 'saveForm');

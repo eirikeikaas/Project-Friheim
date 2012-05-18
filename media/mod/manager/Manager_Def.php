@@ -19,6 +19,10 @@ class Manager_Def extends Controller{
 		$this->defineAction("list", "list.html", array(
 			"pre" => "preList"
 		));
+		
+		$this->defineAction("new", "new.html", array(
+			"pre" => "preList"
+		));
 
 		///////////////////////////////////////////////
 
@@ -33,6 +37,11 @@ class Manager_Def extends Controller{
 	}
 
 	public function preList($app, $params){
+		$settings = ORM::for_table(System::getConfig('settingstable'))->find_many();
+		System::addVars(array('settings' => $settings));
+	}
+	
+	public function preNew($app, $params){
 		$settings = ORM::for_table(System::getConfig('settingstable'))->find_many();
 		System::addVars(array('settings' => $settings));
 	}

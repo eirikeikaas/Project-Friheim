@@ -36,7 +36,7 @@ class Users_Def extends Controller{
 
 		///////////////////////////////////////////////
 
-		$this->defineTab("Brukere", "users", "admin/users/list", 11, true);
+		$this->defineTab("Brukere", "users", "admin/users/list", 11, true, 5);
 
 		//include_once('Users.php');
 		$this->users = ORM::for_table('users');

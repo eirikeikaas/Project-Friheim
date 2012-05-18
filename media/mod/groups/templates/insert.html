@@ -1,13 +1,15 @@
 {% include "templates/header.html" %}
 <div id="content">
 	<form class="block" action="{{ prefix }}/admin/groups/insert/save" method="post">
-		<input type="hidden" name="author" value="{{ user.id }}">
 		<input type="hidden" name="key" value="{{ key }}">
 		<h2>
-			Ny artikkel
+			Ny gruppe
 		</h2>
 		<div class="line">
-			<label for="title">Tittel:</label><input type="text" name="title" value="{{ post.title }}">
+			<label for="title">Navn:</label><input type="text" name="title" value="{{ group.name }}">
+		</div>
+		<div class="line">
+			<label for="title">Nivå:</label><input type="text" name="level" value="{{ group.level }}">
 		</div>
 		<div class="line">
 			<hr />

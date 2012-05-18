@@ -27,7 +27,7 @@ class Settings_Def extends Controller{
 
 		///////////////////////////////////////////////
 
-		$this->defineTab("Instillinger", "settings", "admin/settings/edit", 4, true, 999);
+		$this->defineTab("Innstillinger", "settings", "admin/settings/edit", 4, true, 999);
 	}
 
 	public static function install(){

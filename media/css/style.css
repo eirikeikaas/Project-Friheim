@@ -514,11 +514,12 @@ ol li{
 	background: none;
 	border-radius: 0;
 	height: 100%;
+	width: 94%;
 	float: none;
 	margin: 0;
-	width: 280px;
 	box-shadow: none;
 	resize: none;
+	padding: 3%;
 }
 #customer{
 	width: 200px;
@@ -686,6 +687,15 @@ table.small{
 }
 .inlinestats h6 span{
 	color: #666;
+}
+#stats{
+	float: left;
+}
+#graph{
+	float: right;
+	height: 180px;
+	width: 50%;
+	margin-bottom: 20px;
 }
 .green{
 	color: #61bf6a;

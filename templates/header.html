@@ -12,13 +12,18 @@
 					{% if script.link == true %}
 						@import url('{{ script.script }}');
 					{% else %}
-						{{ script.script }}
+						{% autoescape false %}
+							{{ script.script }}
+						{% endautoescape %}
 					{% endif %}
 				</style>
 			{% elseif script.type == "javascript" %}
 				<script type="text/javascript" {% if script.link == true %}src="{{ script.script }}">{% else %}>
-					{{ script.script }}
+					{% autoescape false %}
+						{{ script.script }}
+					{% endautoescape %}
 					{% endif %}
+					
 				</script>
 			{% endif %}
 		{% endfor %}

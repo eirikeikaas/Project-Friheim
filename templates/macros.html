@@ -27,3 +27,9 @@
 		</tbody>
 	</table>
 {% endmacro %}
+
+{% macro extras(name, file) %}
+	<div id="{{ name }}">
+		{% include file %}
+	</div>
+{% endmacro %}

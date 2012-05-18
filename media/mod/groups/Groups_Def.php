@@ -31,6 +31,7 @@ class Groups_Def extends Controller{
 		));
 
 		$this->defineAction("insert", "insert.html", array(
+			"pre" => "preInsert",
 			"save" => "saveInsert"
 		));
 
@@ -70,6 +71,12 @@ class Groups_Def extends Controller{
 			System::log("Could not save?");
 			return false;
 		}*/
+	}
+	
+	public function preInsert($app, $params){
+		$this->runHook($app, 'startForm');
+		/*$post = $this->users->getSingle($params['id']);
+		System::addVars(array('post' => $post));*/
 	}
 
 	public function saveInsert($app, $params){

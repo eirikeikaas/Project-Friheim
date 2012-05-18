@@ -915,12 +915,8 @@ abstract class Controller{
 			$index[$key] = $val['index'];
 			$data[$key] = $val;
 		}
-		
-		System::log(var_export($data, true));
 
 		array_multisort($index, SORT_ASC, $data);
-		
-		System::log(var_export($data, true));
 		
 		return $data;
 	}
@@ -957,7 +953,7 @@ abstract class Controller{
 		if(isset($this->actionTable[$action]['hooks'][$hook]) && !empty($this->actionTable[$action]['hooks'][$hook])){
 			$method = $this->actionTable[$action]['hooks'][$hook];
 		}else{
-			System::log("Action '$action' does not exist");
+			System::log("Action '$action' does not exist", true);
 			$app->redirect(System::getConfig('prefix').'/admin');
 			return;
 		}
@@ -1036,15 +1032,9 @@ abstract class Controller{
 		}
 	}
 
-	public function addHookInternal($hook, $callback){
-		System::log("DEPRECATION WARNING: The new HookManager-class renders this obsolete");
-		HookManager::addHook($this->name, $hook, $callback);
-		$this->hooks[$hook][] = $callback;
-	}
-
 	public function runHook($app, $hook, $params = array()){
 		System::log("Running hook $hook...");
-		HookManager::runHook($this->name, $hook, $app, $params);
+		return HookManager::runHook($this->name, $hook, $app, $params);
 	}
 
 	/**
@@ -1076,22 +1066,9 @@ abstract class Controller{
 	 * @return void
 	 */
 
-	public function addFilterInternal($filter, $callback){
-		System::log("DEPRECATION WARNING: The new FilterManager-class renders this obsolete");
-		FilterManager::addFilter($this->name, $filter, $callback);
-		$this->filter[$filter][] = $callback;
-	}
-
-	/**
-	 * The construct instantiates the DB, starts the session and stores a hashed version of the User-Agent string
-	 * 
-	 * @access private
-	 * @return void
-	 */
-
 	protected function applyFilter($app, $filter, $filterdata){
 		System::log("Running filter $filter...");
-		FilterManager::applyFilter($this->name, $filter, $app, $filterdata);
+		return FilterManager::applyFilter($this->name, $filter, $app, $filterdata);
 	}
 
 	/**
@@ -1124,19 +1101,27 @@ abstract class Controller{
 
 		if(is_array($action)){
 			for($i=0;$i<$len;$i++){
-				self::$scripts[$action[$i]][] = array(
-					"type" => $type,
-					"script" => $script,
-					"link" => $link
-				);
+				$this->defineScriptInternal($action[$i], $type, $script, $link);
 			}
 		}else{
-			self::$scripts[$action][] = array(
-				"type" => $type,
-				"script" => $script,
-				"link" => $link
-			);
+			$this->defineScriptInternal($action, $type, $script, $link);
 		}
+	}
+	
+	private function defineScriptInternal($action, $type, $script, $link = true){
+		if(isset(self::$scripts[$action]) && !empty(self::$scripts[$action])){
+			foreach(self::$scripts[$action] as $scripts){
+				if($scripts['script'] === $script){
+					return;
+				}
+			}
+		}
+		
+		self::$scripts[$action][] = array(
+			"type" => $type,
+			"script" => $script,
+			"link" => $link
+		);
 	}
 	
 	protected function loadHelper(){

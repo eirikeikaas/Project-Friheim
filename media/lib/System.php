@@ -614,7 +614,7 @@ class System{
 	 */
 
 	public static function addGlobalHook($hook, $callback){
-		Controller::addHook('*', $hook, $callback);
+		HookManager::addHook('*', $hook, $callback);
 	}
 
 	/**
@@ -953,7 +953,8 @@ abstract class Controller{
 		if(isset($this->actionTable[$action]['hooks'][$hook]) && !empty($this->actionTable[$action]['hooks'][$hook])){
 			$method = $this->actionTable[$action]['hooks'][$hook];
 		}else{
-			System::log("Action '$action' does not exist", true);
+			System::log("Action '$action' does not exist for {$this->name}", true);
+			System::log(var_export($this->actionTable, true));
 			$app->redirect(System::getConfig('prefix').'/admin');
 			return;
 		}
@@ -1124,11 +1125,18 @@ abstract class Controller{
 		);
 	}
 	
-	protected function loadHelper(){
-		$file = System::getConfig("basedir")."/media/mod/".ucfirst($this->name)."_Helper.php";
+	protected function loadHelper($instantiate = true){
+		$class = ucfirst($this->name)."_Helper";
+		$file = System::getConfig("basedir")."/media/mod/".strtolower($this->name)."/".$class.".php";
+		System::log($file);
 		if(file_exists($file)){
 			include_once($file);
-			return true;
+			
+			if($instantiate){
+				return new $class();
+			}else{
+				return true;
+			}
 		}
 		return false;
 	}
@@ -1145,6 +1153,7 @@ class HookManager{
 	 */
 
 	public static function addHook($namespace, $name, $callback, $failable = false){
+		System::log("Adding hook $namespace::$name");
 		if(is_callable($callback)){
 			if(!isset(self::$hooks[$namespace])){ self::$hooks[$namespace] = array(); }
 			self::$hooks[$namespace][$name][] = $callback;
@@ -1253,7 +1262,7 @@ class FilterManager{
 /*
 SHOULD BE DEPRECATED ASAP
 */
-abstract class Model{
+/*abstract class Model{
 	private $table = "";
 
 	abstract static function insert();
@@ -1304,7 +1313,7 @@ abstract class Model{
 		}
 		return $formatted;
 	}
-}
+}*/
 
 abstract class Helper{
 	private $name = "";
@@ -1330,11 +1339,18 @@ abstract class Endpoint{
 	private $slug = "";
 	private $version = "";
 	
-	protected function loadHelper(){
-		$file = System::getConfig("basedir")."/media/mod/".strtolower($this->name)."/".ucfirst($this->name)."_Helper.php";
+	protected function loadHelper($instantiate = true){
+		$class = ucfirst($this->name)."_Helper";
+		$file = System::getConfig("basedir")."/media/mod/".strtolower($this->name)."/".$class.".php";
+		System::log($file);
 		if(file_exists($file)){
 			include_once($file);
-			return true;
+			
+			if($instantiate){
+				return new $class();
+			}else{
+				return true;
+			}
 		}
 		return false;
 	}

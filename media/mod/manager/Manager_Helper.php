@@ -13,7 +13,7 @@
  * @uses System
  */
 
-class Settings_Helper extends Helper{
+class Manager_Helper extends Helper{
 
 	/**
 	 * Inserts a new article

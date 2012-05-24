@@ -13,6 +13,7 @@ class Race_Def extends Controller{
 
 	public function __construct(){
 		$this->info("Race", "race", "0.1a");
+		$this->race = $this->loadHelper();
 
 		// ACTIONS ////////////////////////////////////
 
@@ -31,7 +32,10 @@ class Race_Def extends Controller{
 
 		$this->defineAction("new", "new.html", array(
 			"pre" => "preNew",
-			"save" => "saveNew"
+			"save" => array(
+				"callback" => "saveNew",
+				"route" => "admin/race/new"
+			)
 		));
 
 		///////////////////////////////////////////////
@@ -42,7 +46,7 @@ class Race_Def extends Controller{
 
 		///////////////////////////////////////////////
 
-		$this->addFilter("users", "list", function($data){
+		/*$this->addFilter("users", "list", function($data){
 			return $data;
 		}, true);
 		
@@ -50,7 +54,7 @@ class Race_Def extends Controller{
 
 		$this->addHook("users", "insert", function($data){
 			return true;
-		});
+		});*/
 		
 		///////////////////////////////////////////////
 		
@@ -92,7 +96,7 @@ class Race_Def extends Controller{
 
         var options = {
         	legend: { position: 'none' },
-        	chartArea:{left:00,top:0,width:'100%',height:'100%'},
+        	chartArea:{left:0,top:0,width:'100%',height:'100%'},
         	hAxis: { textPosition: 'none' },
         	vAxis: { textPosition: 'none', baselineColor: '#d0d0d0' },
         	colors:['#30aec0'],
@@ -102,10 +106,6 @@ class Race_Def extends Controller{
         var chart = new google.visualization.AreaChart(document.getElementById('graph'));
         chart.draw(data, options);
       }", false);
-		
-
-		//include_once('Users.php');
-		//$this->race = ORM::for_table('race_points');
 	}
 
 	public static function install(){
@@ -146,18 +146,17 @@ class Race_Def extends Controller{
 	public function preNew($app, $params){
 		$this->runHook($app, 'startForm');
 		
-		
 	}
 
 	public function saveNew($app, $params){
 		$this->runHook($app, 'saveForm');
-		if($this->race->update($app->request()->post('id'),$app->request()->post('blogbody'), $app->request()->post('title'))){
-			System::setMessage($app, "Artikkelen ble lagret");
-			return true;
-		}else{
-			System::setMessage($app, "Noe gikk galt under lagringen av artikkelen", false);
-			System::log("Could not save?");
-			return false;
+		$post = $app->request()->post();
+		
+		foreach($post as $k => $v){
+			if(strpos($k, 'week') === 0){
+				$this->race->insert($post['user'], $v, (int)substr($k, -1), $post['month'], 0);
+			}
 		}
+		
 	}
 }

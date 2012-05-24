@@ -1,7 +1,9 @@
 {% include "templates/header.html" %}
 <div id="content">
-	<form class="block" action="{{ prefix }}/admin/blog/insert/save" method="post">
+	<form class="block" action="{{ prefix }}/admin/race/new/save" method="post">
 		<input type="hidden" name="key" value="{{ key }}">
+		<input type="hidden" name="user" value="{{ user.id }}">
+		<input type="hidden" name="month" value="{{ user.data.month }}">
 		<h2>
 			Legg til ny verdi
 		</h2>
@@ -54,7 +56,7 @@
 			<tr>
 				
 				<td>
-					<input name="memow1" placeholder="Uke 1" value="{{ week1 }}>" type="text">
+					<input name="week1" placeholder="Uke 1" value="{{ week1 }}" type="text">
 				</td>
 				<td rowspan="6" id="memoarea">
 					<textarea name="text" placeholder="Mine merknader">{{ memo }}</textarea>
@@ -62,27 +64,27 @@
 			</tr>
 			<tr>
 				<td>
-					<input name="memow2" placeholder="Uke 2" value="{{ week2 }}" type="text">
+					<input name="week2" placeholder="Uke 2" value="{{ week2 }}" type="text">
 				</td>
 			</tr>
 			<tr>
 				<td>
-					<input name="memow3" placeholder="Uke 3" value="{{ week3 }}" type="text">
+					<input name="week3" placeholder="Uke 3" value="{{ week3 }}" type="text">
 				</td>
 			</tr>
 			<tr>
 				<td>
-					<input name="memow4" placeholder="Uke 4" value="{{ week4 }}" type="text">
+					<input name="week4" placeholder="Uke 4" value="{{ week4 }}" type="text">
 				</td>
 			</tr>
 			<tr>
 				<td>
-					<input name="memow5" placeholder="Uke 5" value="{{ week5 }}" type="text">
+					<input name="week5" placeholder="Uke 5" value="{{ week5 }}" type="text">
 				</td>
 			</tr>
 		</table>
 	</div>
-		<div class="line"><input name="month" type="checkbox" /> Ferdigregistrer {{ month }}</div>
+		<div class="line"><input name="nextmonth" type="checkbox" /> Ferdigregistrer {{ month }}</div>
 		<div class="footer"><input type="submit" value="Lagre"><input type="button" class="grey" value="Avbryt"></div>
 	</div>
 </div>

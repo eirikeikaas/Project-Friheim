@@ -30,8 +30,12 @@ class Users_Def extends Controller{
 			"save" => "saveEdit"
 		));
 
-		$this->defineAction("insert", "insert.html", array(
-			"save" => "saveInsert"
+		$this->defineAction("new", "new.html", array(
+			"pre" => "preNew",
+			"save" => array(
+				"callback" => "saveNew",
+				"route" => "admin/users/list"
+			)
 		));
 
 		///////////////////////////////////////////////
@@ -68,19 +72,15 @@ class Users_Def extends Controller{
 
 	public function saveEdit($app, $params){
 		$this->runHook($app, 'saveForm');
-		if($this->users->update($app->request()->post('id'),$app->request()->post('blogbody'), $app->request()->post('title'))){
-			System::setMessage($app, "Artikkelen ble lagret");
-			return true;
-		}else{
-			System::setMessage($app, "Noe gikk galt under lagringen av artikkelen", false);
-			System::log("Could not save?");
-			return false;
-		}
+	}
+	
+	public function preNew($app, $params){
+		$this->runHook($app, 'startForm');
 	}
 
-	public function saveInsert($app, $params){
+	public function saveNew($app, $params){
 		$this->runHook($app, 'saveForm');
-		if($this->users->update($app->request()->post('id'),$app->request()->post('blogbody'), $app->request()->post('title'))){
+		if($this->users->insert($app->request()->post('id'),$app->request()->post('blogbody'), $app->request()->post('title'))){
 			System::setMessage($app, "Artikkelen ble lagret");
 			return true;
 		}else{

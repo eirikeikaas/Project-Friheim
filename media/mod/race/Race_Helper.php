@@ -14,11 +14,23 @@
  */
 
 class Race_Helper extends Helper{
-	public function __construct($table){
+	public function __construct(){
 		$this->info("Race", "race", "0.1a");
 	}
 
 	public function insert($user, $value, $week, $month, $next_month){
+		if(is_array($value) && is_array($week)){
+			for($i=0;$i<$value_len;$i++){
+				$this->insert($user, $value[$i], $week[$i], $month, $nextmonth);
+			}
+		}else{
+			$new = ORM::for_table('RacePoints')->create();
+			$new->user = $user;
+			$new->value = $value;
+			$new->week = $week;
+			$new->month = $month;
+			$new->save();
+		}
 	}
 	
 	public function update($user, $id, $value, $month){
@@ -34,10 +46,11 @@ class Race_Helper extends Helper{
 	}
 	
 	public function get($type, $vars = array()){
+		$users = Settings::getConfig('usertable');
 		switch($type){
 			case "statlist":
 				if($vars['month']=="total"){
-					$r = ORM::raw_query("SELECT tr_users.id AS id, CONCAT(tr_users.firstname,' ',tr_users.lastname) AS name, (SELECT tr_dept.slug FROM tr_dept WHERE tr_dept.id = tr_users.dept) AS dept, (((SELECT (SUM(IFNULL(tr_points.value,0))+SUM(IFNULL(tr_points.correction_value,0))) AS v FROM tr_points WHERE user = tr_users.id)*100)/(SELECT SUM(tr_uservalmonth.total) FROM tr_uservalmonth WHERE tr_uservalmonth.user = tr_users.id)) AS percent FROM tr_users WHERE tr_users.invisible IS NULL ORDER BY percent DESC")->find_many();
+					$r = ORM::raw_query("SELECT {$users}.id AS id, CONCAT(tr_users.firstname,' ',tr_users.lastname) AS name, (SELECT tr_dept.slug FROM tr_dept WHERE tr_dept.id = tr_users.dept) AS dept, (((SELECT (SUM(IFNULL(tr_points.value,0))+SUM(IFNULL(tr_points.correction_value,0))) AS v FROM tr_points WHERE user = tr_users.id)*100)/(SELECT SUM(tr_uservalmonth.total) FROM tr_uservalmonth WHERE tr_uservalmonth.user = tr_users.id)) AS percent FROM tr_users WHERE tr_users.invisible IS NULL ORDER BY percent DESC")->find_many();
 				}else{
 					$r = ORM::raw_query("SELECT tr_users.id AS id, CONCAT(tr_users.firstname,' ',tr_users.lastname) AS name, (SELECT tr_dept.slug FROM tr_dept WHERE tr_dept.id = tr_users.dept) AS dept, (((SELECT (SUM(IFNULL(tr_points.value,0))+SUM(IFNULL(tr_points.correction_value,0))) AS v FROM tr_points WHERE user = tr_users.id AND tr_points.month = :month)*100)/(SELECT tr_uservalmonth.total FROM tr_uservalmonth WHERE tr_uservalmonth.user = tr_users.id AND tr_uservalmonth.month = :month)) AS percent FROM tr_users WHERE tr_users.invisible IS NULL ORDER BY percent DESC", array('month' => $vars['month']))->find_many();
 				}

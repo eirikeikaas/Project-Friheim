@@ -142,7 +142,7 @@ class Auth{
 
 			$this->ua = md5($_SERVER['HTTP_USER_AGENT']);
 			$this->usertable = $table;
-
+			
 			// Hooks
 			System::addGlobalHook('startForm', function($data){
 				System::addVars(array("key" => Auth::key()));
@@ -398,8 +398,16 @@ class Auth{
 			if($q !== false){
 				$a = $q->as_array();
 				$a['name'] = $a['firstname'].' '.$a['lastname'];
-				return $a;
+				
+				$qd = ORM::for_table('UsersData')->where('user', $c_id)->find_many();
+				
+				if($qd !== false){
+					$b = $qd->as_array();
+					$a['data'] = $b;
+					return $a;
+				}
 			}
+			
 		}else{
 			return self::$user;
 		}

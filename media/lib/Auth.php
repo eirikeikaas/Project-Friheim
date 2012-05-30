@@ -134,10 +134,10 @@ class Auth{
 	 * @return void
 	 */
 
-	public function __construct($table = "users"){
+	public function __construct($table = "Users"){
 		if(class_exists("DB") && class_exists("System")){
 			$this->conn = &DB::getInstance();
-			self::$users = ORM::for_table('users');
+			self::$users = ORM::for_table(System::getConfig('userTable'));
 			$this->session();
 
 			$this->ua = md5($_SERVER['HTTP_USER_AGENT']);

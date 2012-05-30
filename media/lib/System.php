@@ -1259,63 +1259,7 @@ class FilterManager{
 	}
 }
 
-/*
-SHOULD BE DEPRECATED ASAP
-*/
-/*abstract class Model{
-	private $table = "";
-
-	abstract static function insert();
-	abstract static function update();
-	abstract static function delete();
-
-	protected function table($name){
-		$this->table = $name;
-	}
-
-	public function getAll($offset = 0, $limit = 10, $join = false){
-		System::log("DEPRECATION WARNING: The Model-class is due for removal", true);
-		$c_offset = DB::escape($offset);
-		$c_limit = DB::escape($limit);	
-		$t = $this->table;
-		$res = DB::get("SELECT * FROM $t LIMIT $c_limit OFFSET $c_offset", false);
-		return $res;
-	}
-
-	public function getSingle($id, $join = false){
-		System::log("DEPRECATION WARNING: The Model-class is due for removal", true);
-		$c_id = DB::escape($id);
-		$t = $this->table;
-		$res = DB::get("SELECT * FROM $t WHERE id = $c_id LIMIT 1");
-		return $res;
-	}
-
-	private function formatJoin($join){
-		System::log("DEPRECATION WARNING: The Model-class is due for removal", true);
-		$formatted = "";
-		$len = count($join);
-
-		for($i=0;$i<$len;$i++){
-			$xleft = explode($join[$i][0],'.');
-			$xright = explode($join[$i][2],'.');
-
-			if($xleft[0] != $this->table){
-				$jointable = $xleft[0];
-			}else if($xleft[0] != $this->table){
-				$jointable = $xright[0];
-			}
-
-			$formatted .= "INNER JOIN $jointable ON {$join[$i]} ";
-
-			if($i<$len){
-				$formatted .= "AND ";
-			}
-		}
-		return $formatted;
-	}
-}*/
-
-abstract class Helper{
+class Helper{
 	private $name = "";
 	private $slug = "";
 	private $version = "";
@@ -1334,7 +1278,7 @@ abstract class Helper{
 	}
 }
 
-abstract class Endpoint{
+class Endpoint{
 	private $name = "";
 	private $slug = "";
 	private $version = "";
